@@ -166,8 +166,12 @@
 
           <div class="flex items-center gap-2 min-w-[140px] justify-end">
             <Transition name="fade" mode="out-in">
-              
-              <div v-if="updateState === 'checking' || updateState === 'downloading'" class="flex items-center gap-3 px-2">
+  
+              <div 
+                v-if="updateState === 'checking' || updateState === 'downloading'" 
+                class="flex items-center gap-3 px-2"
+                key="checking" 
+              >
                 <span class="text-xs text-slate-500 font-medium whitespace-nowrap">
                   {{ updateState === 'downloading' 
                       ? `${downloadProgress}%` 
@@ -181,6 +185,7 @@
                 v-else-if="hasUpdate"
                 @click="startUpdate"
                 class="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-all shadow-sm hover:shadow-md active:scale-95"
+                key="has-update"
               >
                 <Download class="w-4 h-4" />
                 <span>{{ t('settings.update.btn_update_now') }}</span>
@@ -189,7 +194,8 @@
               <div 
                 v-else-if="showLatestFeedback"
                 class="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-600 border border-green-100 rounded-lg"
-              >
+                key="latest-feedback"
+  >
                 <CheckCircle2 class="w-4 h-4" />
                 <span class="text-sm font-medium">{{ t('settings.update.latest_status') || 'Up to date' }}</span>
               </div>
@@ -198,7 +204,8 @@
                 v-else
                 @click="checkForUpdates(true)" 
                 class="px-3 py-1.5 text-sm font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors hover:border-slate-300"
-              >
+                key="idle"
+  >
                 {{ t('settings.update.btn_check') }}
               </button>
 
