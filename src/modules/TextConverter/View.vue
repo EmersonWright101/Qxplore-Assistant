@@ -4,7 +4,7 @@
     <div class="space-y-3">
       <div class="flex items-center justify-between ml-1">
         <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          {{ t('source_text') }}
+          {{ t('text.source') }}
         </label>
         <button 
           v-if="inputText"
@@ -12,7 +12,7 @@
           class="text-xs text-slate-400 hover:text-red-500 transition-colors px-2 py-1 rounded-md hover:bg-red-50 flex items-center gap-1"
         >
           <XCircle class="w-3.5 h-3.5" />
-          <span>{{ t('clear') }}</span>
+          <span>{{ t('common.clear') }}</span>
         </button>
       </div>
       
@@ -20,9 +20,9 @@
         <textarea 
           v-model="inputText" 
           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 min-h-[200px] text-slate-700 text-base placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none shadow-sm"
-          :placeholder="t('text_converter_prompt')"
+          :placeholder="t('text.input_prompt')" 
         ></textarea>
-      </div>
+        </div>
     </div>
 
     <div class="relative bg-slate-100/80 p-1 rounded-lg inline-flex flex-wrap shadow-inner border border-slate-200/50 backdrop-blur-sm">
@@ -46,7 +46,7 @@
     <div class="space-y-3">
       <div class="flex items-center justify-between ml-1 h-8">
         <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          {{ t('convertion_result') }}
+          {{ t('text.result') }}
         </label>
         
         <Transition name="fade">
@@ -57,7 +57,7 @@
             :class="copied ? 'text-green-600 bg-green-50 border-green-100' : 'text-slate-500 hover:text-blue-600 hover:bg-blue-50/80 hover:border-blue-100'"
           >
             <component :is="copied ? Check : Clipboard" class="w-3.5 h-3.5 transition-transform" :class="{ 'scale-110': copied }" />
-            <span>{{ copied ? t('copied') : t('copy_result') }}</span>
+            <span>{{ copied ? t('common.copied') : t('text.copy_result') }}</span>
           </button>
         </Transition>
       </div>
@@ -68,7 +68,7 @@
             <span :key="resultText + currentMode" v-if="resultText" class="block select-text">
               {{ resultText }}
             </span>
-            <span v-else class="text-slate-300 italic text-sm select-none">{{ t('waiting_input') }}...</span>
+            <span v-else class="text-slate-300 italic text-sm select-none">{{ t('common.waiting_input') }}...</span>
           </Transition>
         </div>
         </div>
@@ -89,30 +89,32 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
 const inputText = ref('');
-const currentMode = ref<ConversionMode>('camel');
+const currentMode = ref<ConversionMode>('camel'); // 确保这里的默认值 'camel' 对应下面的 modes 中的 value
 const copied = ref(false); // 控制复制成功的状态
 
 // 按钮引用数组和滑块样式
 const buttonRefs = ref<HTMLButtonElement[]>([]);
 const gliderStyle = ref({ width: '0px', transform: 'translateX(0px)', opacity: '0' });
 
-// 模式定义（我根据你截图补全了所有模式）
-const modes: { label: string; value: ConversionMode }[] = [
-  { label: t('uppercase'), value: 'uppercase' },
-  { label: t('lowercase'), value: 'lowercase' },
-  { label: t('titleCase'), value: 'firstUpper' },
-  // 假设你也实现了这个，如果没有请在 converter.ts 补充
-  { label: t('uncapitalize'), value: 'firstLower' as any }, 
-  { label: t('UpperCamelCase'), value: 'Camel' as any },
-  { label: t('lowerCamelCase'), value: 'camel' },
-  { label: t('snake_case'), value: 'snake' },
-];
+// 模式定义：修改为引用 text.modes 下的具体 key
+const modes = computed(() => [
+  { label: t('text.modes.uppercase'), value: 'uppercase' },
+  { label: t('text.modes.lowercase'), value: 'lowercase' },
+  { label: t('text.modes.titleCase'), value: 'firstUpper' },
+  { label: t('text.modes.uncapitalize'), value: 'firstLower' as any }, 
+  { label: t('text.modes.UpperCamelCase'), value: 'Camel' as any },
+  { label: t('text.modes.lowerCamelCase'), value: 'camel' },
+  { label: t('text.modes.snake_case'), value: 'snake' },
+]);
+// 注意：我把 modes 改成了 computed，这样当语言切换时，按钮文字会自动更新。
+// 如果不需要动态切换语言支持，保持原来的 const 数组写法也可以，但用 computed 是最佳实践。
 
 const resultText = computed(() => convertText(inputText.value, currentMode.value));
 
 // 计算滑块位置
 const updateGlider = () => {
-  const index = modes.findIndex(m => m.value === currentMode.value);
+  // modes 现在是 computed，需要用 modes.value
+  const index = modes.value.findIndex(m => m.value === currentMode.value);
   // 增加安全检查，防止 index 为 -1
   if (index < 0 || !buttonRefs.value[index]) return;
   

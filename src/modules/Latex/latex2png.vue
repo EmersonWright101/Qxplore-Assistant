@@ -4,7 +4,7 @@
     <div class="space-y-3">
       <div class="flex items-center justify-between ml-1">
         <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          {{ t('latex_source_code') }}
+          {{ t('latex.source_code') }}
         </label>
         <button 
           v-if="inputLatex"
@@ -12,7 +12,7 @@
           class="text-xs text-slate-400 hover:text-red-500 transition-colors px-2 py-1 rounded-md hover:bg-red-50 flex items-center gap-1"
         >
           <XCircle class="w-3.5 h-3.5" />
-          <span>{{ t('clear') }}</span>
+          <span>{{ t('common.clear') }}</span>
         </button>
       </div>
       
@@ -20,22 +20,22 @@
         <textarea 
           v-model="inputLatex" 
           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 min-h-[150px] text-slate-700 font-mono text-base placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-y shadow-sm"
-          :placeholder="t('latex_input_prompt')"
+          :placeholder="t('latex.input_prompt')" 
         ></textarea>
-      </div>
+        </div>
     </div>
 
     <div class="space-y-3">
       <div class="flex items-center justify-between ml-1 h-8">
         <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          {{ t('realtime_preview') }}
+          {{ t('latex.realtime_preview') }}
         </label>
         
         <div class="flex items-center gap-2">
           
           <Transition name="fade">
             <div v-if="inputLatex" class="flex items-center gap-2 mr-2 px-3 py-1 bg-slate-50 rounded-md border border-slate-100">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ t('resolution') }}</span>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ t('common.resolution') }}</span>
               <input 
                 type="range" 
                 v-model.number="resolution" 
@@ -56,7 +56,7 @@
               :class="copiedSource ? 'text-green-600 bg-green-50 border-green-100' : 'text-slate-500 hover:text-blue-600 hover:bg-blue-50/80 hover:border-blue-100'"
             >
               <component :is="copiedSource ? Check : Clipboard" class="w-3.5 h-3.5" />
-              <span>{{ copiedSource ? t('source_code_copied') : t('copy_source_code') }}</span>
+              <span>{{ copiedSource ? t('latex.source_copied') : t('latex.copy_source') }}</span>
             </button>
           </Transition>
 
@@ -70,7 +70,7 @@
                 downloadSuccess ? 'text-green-600 bg-green-50 border-green-100' : 'text-slate-500 hover:text-purple-600 hover:bg-purple-50/80 hover:border-purple-100',
                 isDownloading ? 'opacity-50 cursor-wait' : 'active:scale-95'
               ]"
-              title="保存透明背景 PNG"
+              :title="t('latex.download_png')"
             >
               <component :is="downloadSuccess ? Check : Download" v-if="!isDownloading" class="w-3.5 h-3.5" />
               <svg v-else class="animate-spin h-3.5 w-3.5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -95,7 +95,7 @@
               v-html="previewHtml"
             ></div>
             
-            <span v-else class="text-slate-300 italic text-sm select-none">{{ t('waiting_input') }} ...</span>
+            <span v-else class="text-slate-300 italic text-sm select-none">{{ t('common.waiting_input') }} ...</span>
           </Transition>
 
         </div>
@@ -117,7 +117,7 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
 const inputLatex = ref<string>('');
-const resolution = ref<number>(5); // 1. 新增：分辨率状态变量
+const resolution = ref<number>(5); 
 const copiedSource = ref(false);
 const previewRef = ref<HTMLElement | null>(null);
 
@@ -125,9 +125,10 @@ const isDownloading = ref(false);
 const downloadSuccess = ref(false);
 
 const downloadText = computed(() => {
-  if (downloadSuccess.value) return t('saved');
-  if (isDownloading.value) return '生成中...'; // 如果您有 'generating' 的翻译key，建议替换
-  return t('download_png');
+  // 🟢 修改：使用 common.saved / common.loading / latex.download_png
+  if (downloadSuccess.value) return t('common.saved');
+  if (isDownloading.value) return t('common.loading'); 
+  return t('latex.download_png');
 });
 
 const previewHtml = computed(() => {
@@ -139,7 +140,8 @@ const previewHtml = computed(() => {
       output: 'html',
     });
   } catch (error) {
-    return `<span class="text-red-500 font-mono text-sm">语法错误: ${(error as Error).message}</span>`;
+    // 这里的 "Syntax Error" 可以根据需要保留英文或硬编码中文，因为 i18n 文件中没有专门的语法错误 key
+    return `<span class="text-red-500 font-mono text-sm">Syntax Error: ${(error as Error).message}</span>`;
   }
 });
 
@@ -158,13 +160,12 @@ const downloadPng = async () => {
   try {
     const dataUrl = await toPng(previewRef.value, {
       backgroundColor: 'rgba(0,0,0,0)', 
-      pixelRatio: resolution.value, // 2. 修改：使用动态分辨率
+      pixelRatio: resolution.value, 
       skipAutoScale: true,
       cacheBust: true,
     });
 
     const link = document.createElement('a');
-    // 3. 修改：文件名带上分辨率信息
     const filename = `latex_formula_${resolution.value}x_${Date.now()}.png`;
     
     link.download = filename;
@@ -179,7 +180,8 @@ const downloadPng = async () => {
 
   } catch (err) {
     console.error('Download Failed:', err);
-    alert('PNG 生成失败: ' + (err as Error).message);
+    // 🟢 修改：使用 common.failed
+    alert(t('common.failed') + ': ' + (err as Error).message);
   } finally {
     isDownloading.value = false;
   }
@@ -187,6 +189,7 @@ const downloadPng = async () => {
 </script>
 
 <style scoped>
+/* 样式保持不变 */
 .slide-fade-enter-active,
 .slide-fade-leave-active {
   transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
@@ -218,7 +221,6 @@ const downloadPng = async () => {
   cursor: wait;
 }
 
-/* 4. 新增：滑块样式优化 */
 input[type=range] {
   -webkit-appearance: none; 
   background: transparent; 
@@ -229,21 +231,21 @@ input[type=range]::-webkit-slider-thumb {
   height: 14px;
   width: 14px;
   border-radius: 50%;
-  background: #3b82f6; /* blue-500 */
+  background: #3b82f6; 
   margin-top: -5px; 
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   transition: background 0.2s;
 }
 
 input[type=range]::-webkit-slider-thumb:hover {
-  background: #2563eb; /* blue-600 */
+  background: #2563eb; 
 }
 
 input[type=range]::-webkit-slider-runnable-track {
   width: 100%;
   height: 4px;
   cursor: pointer;
-  background: #e2e8f0; /* slate-200 */
+  background: #e2e8f0; 
   border-radius: 2px;
 }
 </style>

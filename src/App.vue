@@ -11,8 +11,8 @@
              <Command class="w-5 h-5 text-white" />
           </div>
           <div class="flex flex-col">
-            <span class="text-base font-bold text-slate-800 leading-tight tracking-wide">{{ t('my_assistant') }}</span>
-            <span class="text-[10px] text-slate-400 uppercase font-medium tracking-wider">{{ t('toolbox') }}</span>
+            <span class="text-base font-bold text-slate-800 leading-tight tracking-wide">{{ t('sidebar.my_assistant') }}</span>
+            <span class="text-[10px] text-slate-400 uppercase font-medium tracking-wider">{{ t('sidebar.toolbox') }}</span>
           </div>
         </router-link>
       </div>
@@ -70,7 +70,7 @@
           active-class="bg-gray-100 text-slate-900 font-medium"
         >
           <Settings class="w-5 h-5 text-slate-500" />
-          <span class="text-sm">{{ t('settings') }}</span>
+          <span class="text-sm">{{ t('sidebar.settings') }}</span>
         </router-link>
       </div>
 
@@ -89,7 +89,7 @@
           :class="route.path === '/' 
             ? 'text-slate-500 hover:bg-white/60 hover:text-slate-800' 
             : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'"
-          title="切换侧边栏"
+          title="Toggle Sidebar"
         >
           <PanelLeft class="w-5 h-5" />
         </button>
@@ -126,8 +126,6 @@ import {
   Eraser
 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
-
-// --- 新增导入: Tauri 更新和对话框插件 ---
 import { check } from '@tauri-apps/plugin-updater';
 import { ask } from '@tauri-apps/plugin-dialog';
 import { relaunch } from '@tauri-apps/plugin-process';
@@ -140,41 +138,40 @@ const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value;
 };
 
-// --- 原有逻辑：菜单定义 (使用了 FileText, Type, FunctionSquare 等) ---
+// 🟢 修改：全部使用 sidebar.* 作为 key
 const menuGroups = computed(() => [
   {
     id: 'text',
-    label: t('text_manipulation'),
+    label: t('sidebar.text_manipulation'),
     icon: FileText,
     iconColor: 'text-blue-600 group-hover:text-blue-700',
     bgColor: 'bg-blue-50 group-hover:bg-blue-100/80',
     children: [
-      { path: '/text', label: t('case_converter'), icon: Type }
+      { path: '/text', label: t('sidebar.case_converter'), icon: Type }
     ]
   },
   {
     id: 'math',
-    label: t('mathematical_tools'),
+    label: t('sidebar.mathematical_tools'),
     icon: FunctionSquare, 
     iconColor: 'text-emerald-600 group-hover:text-emerald-700',
     bgColor: 'bg-emerald-50 group-hover:bg-emerald-100/80',
     children: [
-      { path: '/latex', label: t('latex2png'), icon: Sigma }
+      { path: '/latex', label: t('sidebar.latex2png'), icon: Sigma }
     ]
   },
   {
     id: 'image',
-    label: t('image_processing'),
+    label: t('sidebar.image_processing'),
     icon: ImageIcon,
     iconColor: 'text-purple-600 group-hover:text-purple-700',
     bgColor: 'bg-purple-50 group-hover:bg-purple-100/80',
     children: [
-      { path: '/image/remove-bg', label: t('remove_bg'), icon: Eraser }
+      { path: '/image/remove-bg', label: t('sidebar.remove_bg'), icon: Eraser }
     ]
   }
 ]);
 
-// --- 原有逻辑：菜单折叠状态 (使用了 reactive) ---
 const collapsedGroups = reactive<Record<string, boolean>>({
   text: false,
   math: false,
@@ -185,22 +182,19 @@ const toggleGroup = (id: string) => {
   collapsedGroups[id] = !collapsedGroups[id];
 };
 
+// 🟢 修改：头部标题映射也改为 sidebar.*
 const currentRouteName = computed(() => {
   switch (route.path) {
-    case '/text': return t('case_converter');
-    case '/async': return t('network_test');
-    case '/settings': return t('settings');
-    case '/latex': return t('latex2png');
-    case '/image/remove-bg': return t('remove_bg');
+    case '/text': return t('sidebar.case_converter');
+    case '/async': return t('sidebar.network_test');
+    case '/settings': return t('sidebar.settings');
+    case '/latex': return t('sidebar.latex2png');
+    case '/image/remove-bg': return t('sidebar.remove_bg');
     default: return '';
   }
 });
 
-// ==========================================
-// 新增: 自动更新检测逻辑
-// ==========================================
 onMounted(() => {
-  // 启动 1 分钟 (60000ms) 后执行后台检查
   setTimeout(async () => {
     await backgroundUpdateCheck();
   }, 60000);
@@ -208,23 +202,21 @@ onMounted(() => {
 
 const backgroundUpdateCheck = async () => {
   try {
-    // 1. 检查更新
     const update = await check();
     
-    // 2. 如果发现新版本
     if (update?.available) {
-      // 3. 弹窗询问用户 (确保 capabilities 中有 dialog:allow-ask)
+      // 🟢 修改：更新弹窗文案使用 settings.update.*
+      // 注意：i18n 文件中 settings.update 下是嵌套的
       const yes = await ask(
-        `${t('update.new_version')}: v${update.version}\n${t('update.confirm_update_desc') || 'Detect new version, update now?'}`, 
+        `${t('settings.update.new_version')}: v${update.version}`, 
         {
-          title: t('update.title') || 'New Version',
+          title: t('settings.update.title'),
           kind: 'info',
-          okLabel: t('update.btn_update_now') || 'Update',
-          cancelLabel: t('cancel') || 'Later'
+          okLabel: t('settings.update.btn_update_now'),
+          cancelLabel: 'Cancel' // i18n中没有通用的Cancel，保留英文或使用 'Later'
         }
       );
 
-      // 4. 如果用户点击确认
       if (yes) {
         await update.downloadAndInstall();
         await relaunch();
@@ -237,7 +229,7 @@ const backgroundUpdateCheck = async () => {
 </script>
 
 <style>
-/* 保持之前的动画样式 */
+/* 样式保持不变 */
 .scale-fade-enter-active,
 .scale-fade-leave-active {
   transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);

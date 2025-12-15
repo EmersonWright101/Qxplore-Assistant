@@ -2,7 +2,7 @@
   <div class="h-full flex flex-col p-6 gap-6">
     <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
       <p class="text-slate-600 text-base font-medium">
-        <i18n-t keypath="support_paste" tag="span">
+        <i18n-t keypath="image.support_paste" tag="span">
             <template #binding>
             <span class="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">Ctrl + V</span>
             </template>
@@ -12,14 +12,14 @@
       <div class="flex flex-wrap items-center gap-3">
         <div class="flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 rounded-lg shadow-sm h-8">
           <Settings2 class="w-3.5 h-3.5 text-slate-500" />
-          <span class="text-xs font-semibold text-slate-700 whitespace-nowrap">{{ t('model') }}:</span>
+          <span class="text-xs font-semibold text-slate-700 whitespace-nowrap">{{ t('image.model') }}:</span>
           <select 
             v-model="selectedModel"
             :disabled="isProcessing"
             class="text-xs bg-slate-50 border-slate-200 rounded pl-2 pr-6 h-6 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
           >
-            <option value="medium">{{ t('model_medium') }}</option>
-            <option value="small">{{ t('model_small') }}</option>
+            <option value="medium">{{ t('image.model_medium') }}</option>
+            <option value="small">{{ t('image.model_small') }}</option>
           </select>
         </div>
 
@@ -29,7 +29,7 @@
           :class="{'opacity-50 cursor-not-allowed': isProcessing}"
         >
           <Cpu class="w-3.5 h-3.5" :class="useGpu ? 'text-indigo-600' : 'text-slate-500'" />
-          <span class="text-xs font-semibold text-slate-700 whitespace-nowrap">{{ t('use_gpu') }}:</span>
+          <span class="text-xs font-semibold text-slate-700 whitespace-nowrap">{{ t('image.use_gpu') }}:</span>
           
           <div 
             class="w-7 h-3.5 rounded-full relative transition-colors duration-200 ease-in-out"
@@ -44,7 +44,7 @@
 
         <div class="flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 rounded-lg shadow-sm h-8">
           <Scaling class="w-3.5 h-3.5 text-slate-500" />
-          <span class="text-xs font-semibold text-slate-700 whitespace-nowrap">{{ t('export_scale') }}:</span>
+          <span class="text-xs font-semibold text-slate-700 whitespace-nowrap">{{ t('image.export_scale') }}:</span>
           <input 
             type="number" 
             v-model.number="exportScale" 
@@ -75,7 +75,7 @@
       <div class="flex flex-col h-full">
         <div class="flex items-center justify-between mb-2 h-8">
           <div class="text-sm font-semibold text-slate-700 flex items-center gap-2">
-            <ImageIcon class="w-4 h-4" /> {{ t('original_image') }}
+            <ImageIcon class="w-4 h-4" /> {{ t('image.original') }}
           </div>
           
           <button 
@@ -84,7 +84,7 @@
             class="flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-md transition-colors shadow-sm"
           >
             <Trash2 class="w-3.5 h-3.5" />
-            {{ t('clear') }}
+            {{ t('common.clear') }}
           </button>
         </div>
         
@@ -104,11 +104,11 @@
             <div class="w-14 h-14 bg-white rounded-full shadow-sm mx-auto mb-3 flex items-center justify-center">
               <UploadCloud class="w-7 h-7 text-indigo-500" />
             </div>
-            <p class="text-sm text-slate-500 font-medium">{{ t('click_paste_prompt') }}</p>
+            <p class="text-sm text-slate-500 font-medium">{{ t('image.click_paste_prompt') }}</p>
           </div>
           
           <div v-if="isDragging" class="absolute inset-0 bg-indigo-500/10 border-2 border-indigo-500 rounded-xl z-20 flex items-center justify-center backdrop-blur-sm">
-            <span class="text-indigo-600 font-bold">{{ t('drop_to_upload') }}</span>
+            <span class="text-indigo-600 font-bold">{{ t('image.drop_to_upload') }}</span>
           </div>
         </div>
       </div>
@@ -118,12 +118,12 @@
           <div class="flex items-center gap-2">
             <div class="text-sm font-semibold text-slate-700 flex items-center gap-2">
               <Layers class="w-4 h-4" /> 
-              {{ t('processing_result') }}
+              {{ t('image.processing_result') }}
             </div>
             
             <div v-if="processedUrl || isProcessing" class="flex items-center gap-2 ml-2 animate-in fade-in slide-in-from-left-2 duration-300">
               <span class="text-[10px] font-medium text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
-                {{ selectedModel === 'medium' ? t('high_precision') : t('fast_mode') }}
+                {{ selectedModel === 'medium' ? t('image.high_precision') : t('image.fast_mode') }}
               </span>
               <span class="text-[10px] font-medium text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded uppercase">
                 {{ useGpu ? 'GPU' : 'CPU' }}
@@ -150,13 +150,13 @@
             }"
           >
             <template v-if="saveStatus === 'idle'">
-              <Download class="w-3.5 h-3.5" /> {{ t('download') }}
+              <Download class="w-3.5 h-3.5" /> {{ t('common.download') }}
             </template>
             <template v-else-if="saveStatus === 'success'">
-              <Check class="w-3.5 h-3.5" /> {{ t('saved') }}
+              <Check class="w-3.5 h-3.5" /> {{ t('common.saved') }}
             </template>
             <template v-else>
-              <X class="w-3.5 h-3.5" /> {{ t('failed') }}
+              <X class="w-3.5 h-3.5" /> {{ t('common.failed') }}
             </template>
           </button>
         </div>
@@ -165,13 +165,13 @@
           
           <div v-if="isProcessing" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-indigo-600">
              <Loader2 class="w-8 h-8 animate-spin mb-2" />
-             <span class="text-sm font-medium">{{ t('processing') }}</span>
+             <span class="text-sm font-medium">{{ t('image.processing') }}</span>
           </div>
 
           <img v-if="processedUrl" :src="processedUrl" class="relative z-0 max-w-full max-h-full object-contain p-2" />
           
           <div v-else-if="!isProcessing && !originalUrl" class="text-slate-300 text-xs select-none">
-             {{ t('no_content') }}
+             {{ t('common.no_content') }}
           </div>
         </div>
       </div>
@@ -185,7 +185,7 @@
         class="w-full md:w-auto px-8 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-bold text-sm transition-all shadow-lg shadow-indigo-200 active:scale-95"
       >
         <Wand2 class="w-4 h-4" />
-        {{ processedUrl ? t('re_remove_bg') : t('start_remove_bg') }}
+        {{ processedUrl ? t('image.re_remove') : t('image.start_remove') }}
       </button>
     </div>
   </div>
@@ -200,7 +200,6 @@ import {
 import type { Config } from '@imgly/background-removal';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { settings } from '../../store/settings';
-// 使用 Vite 特有的 worker 导入语法，配合 format: 'es' 配置
 import BgWorker from '../../workers/bg-removal.worker.ts?worker';
 import { useI18n } from 'vue-i18n';
 
@@ -238,7 +237,8 @@ const resetTimerDom = () => {
 
 const handleFile = (file: File) => {
   if (!file.type.startsWith('image/')) {
-    errorMsg.value = t('err_upload_image');
+    // 🟢 修改：image.errors.upload_image
+    errorMsg.value = t('image.errors.upload_image');
     return;
   }
   if (originalUrl.value) URL.revokeObjectURL(originalUrl.value);
@@ -307,7 +307,6 @@ const processImage = async () => {
 
   const startTime = Date.now();
 
-  // 简单的计时器
   const updateTimer = () => {
     if (!isProcessing.value) return;
     const now = Date.now();
@@ -322,7 +321,6 @@ const processImage = async () => {
   
   requestAnimationFrame(updateTimer);
 
-  // 构建模型路径
   let baseUrl = '';
   if (settings.modelPath) {
       let cleanPath = settings.modelPath.replace(/\\/g, '/').replace(/\/$/, '');
@@ -337,11 +335,9 @@ const processImage = async () => {
     publicPath: baseUrl, 
     model: selectedModel.value as any, 
     device: useGpu.value ? 'gpu' : 'cpu',
-    // 进度回调在 Worker 中无法传递，故设为空
     progress: () => {}
   };
 
-  // 实例化 Worker
   const worker = new BgWorker();
 
   worker.onmessage = (e) => {
@@ -351,10 +347,11 @@ const processImage = async () => {
       processedUrl.value = URL.createObjectURL(blob);
       isProcessing.value = false;
       if (timerRef.value) processingTime.value = timerRef.value.innerText.trim();
-      worker.terminate(); // 任务完成后关闭 Worker 释放内存
+      worker.terminate();
     } else if (type === 'error') {
       console.error(error);
-      errorMsg.value = `${t('err_process_failed')}: ${error}`;
+      // 🟢 修改：image.errors.process_failed
+      errorMsg.value = `${t('image.errors.process_failed')}: ${error}`;
       isProcessing.value = false;
       worker.terminate();
     }
@@ -362,12 +359,12 @@ const processImage = async () => {
 
   worker.onerror = (err) => {
     console.error("Worker generic error:", err);
-    errorMsg.value = t('err_worker_error');
+    // 🟢 修改：image.errors.worker_error
+    errorMsg.value = t('image.errors.worker_error');
     isProcessing.value = false;
     worker.terminate();
   };
 
-  // 发送数据，注意 config 需要深拷贝以去除函数属性（如 progress）
   worker.postMessage({ 
     file: originalFile.value, 
     config: JSON.parse(JSON.stringify(config))
@@ -384,7 +381,6 @@ const downloadImage = async () => {
       img.onerror = reject;
     });
     const canvas = document.createElement('canvas');
-    // 限制最大/最小缩放
     const scale = Math.max(0.1, Math.min(5, exportScale.value / 100));
     canvas.width = img.naturalWidth * scale;
     canvas.height = img.naturalHeight * scale;

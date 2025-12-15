@@ -52,7 +52,7 @@
           to="/text"
           class="inline-flex items-center gap-2 px-8 py-3 bg-white/60 hover:bg-white border border-white/60 backdrop-blur-xl rounded-full shadow-sm hover:shadow-md text-slate-600 hover:text-blue-600 transition-all duration-300 active:scale-95"
         >
-          <span>{{ t('start_work') }}</span>
+          <span>{{ t('home.start_work') }}</span>
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
@@ -72,16 +72,15 @@ const { t } = useI18n();
 
 const timeString = ref('');
 const dateString = ref('');
-const greetingKey = ref('good_morning'); // 存 key 而不是存文字
+// 🟢 修改点：默认值改为符合 i18n 结构的 key
+const greetingKey = ref('home.greeting.morning');
 
-// 模拟时钟的角度
 const hourDeg = ref(0);
 const minuteDeg = ref(0);
 const secondDeg = ref(0);
 
 let timer: any = null;
 
-// 计算属性：自动翻译问候语
 const translatedGreeting = computed(() => t(greetingKey.value));
 
 const updateTime = () => {
@@ -93,7 +92,6 @@ const updateTime = () => {
     hour: '2-digit',
     minute: '2-digit',
   };
-  // 🟢 如果设置里开启了秒，才显示秒
   if (settings.showSeconds) {
     options.second = '2-digit';
   }
@@ -102,12 +100,12 @@ const updateTime = () => {
     options
   );
 
-  // 2. 模拟时钟逻辑 (计算角度)
+  // 2. 模拟时钟逻辑
   const sec = now.getSeconds();
   const min = now.getMinutes();
   const hr = now.getHours();
   
-  secondDeg.value = sec * 6; // 360 / 60 = 6度
+  secondDeg.value = sec * 6;
   minuteDeg.value = min * 6 + sec * 0.1; 
   hourDeg.value = (hr % 12) * 30 + min * 0.5;
 
@@ -117,11 +115,12 @@ const updateTime = () => {
     { weekday: 'long', month: 'long', day: 'numeric' }
   );
 
-  // 4. 问候语 Key
-  if (hr >= 5 && hr < 12) greetingKey.value = 'good_morning';
-  else if (hr >= 12 && hr < 18) greetingKey.value = 'good_afternoon';
-  else if (hr >= 18 && hr < 22) greetingKey.value = 'good_evening';
-  else greetingKey.value = 'good_night';
+  // 4. 问候语 Key Logic
+  // 🟢 修改点：更新这里的赋值逻辑，使其匹配 i18n/index.ts 的结构
+  if (hr >= 5 && hr < 12) greetingKey.value = 'home.greeting.morning';
+  else if (hr >= 12 && hr < 18) greetingKey.value = 'home.greeting.afternoon';
+  else if (hr >= 18 && hr < 22) greetingKey.value = 'home.greeting.evening';
+  else greetingKey.value = 'home.greeting.night';
 };
 
 onMounted(() => {
@@ -135,7 +134,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* 动画代码不变 */
+/* 样式保持不变 */
 @keyframes blob {
   0% { transform: translate(0px, 0px) scale(1); }
   33% { transform: translate(30px, -50px) scale(1.1); }
