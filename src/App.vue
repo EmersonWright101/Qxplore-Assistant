@@ -18,7 +18,6 @@
       </div>
 
       <nav class="flex-1 px-3 space-y-1 overflow-y-auto min-w-[256px] pt-2">
-        
         <div v-for="group in menuGroups" :key="group.id" class="space-y-1 mb-3">
           <button 
             @click="toggleGroup(group.id)"
@@ -60,16 +59,21 @@
             </div>
           </Transition>
         </div>
-
       </nav>
 
       <div class="p-3 mt-auto border-t border-gray-200/50 min-w-[256px]">
         <router-link 
           to="/settings" 
-          class="flex items-center gap-3 px-3 py-2 w-full rounded-md text-slate-600 hover:bg-slate-200/50 transition-colors"
+          class="flex items-center gap-3 px-3 py-2 w-full rounded-md text-slate-600 hover:bg-slate-200/50 transition-colors relative"
           active-class="bg-gray-100 text-slate-900 font-medium"
         >
-          <Settings class="w-5 h-5 text-slate-500" />
+          <div class="relative">
+            <Settings class="w-5 h-5 text-slate-500" />
+            <span 
+              v-if="hasAppUpdate" 
+              class="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white animate-pulse"
+            ></span>
+          </div>
           <span class="text-sm">{{ t('sidebar.settings') }}</span>
         </router-link>
       </div>
@@ -114,31 +118,24 @@
 import { ref, computed, reactive, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { 
-  Settings, 
-  PanelLeft, 
-  ChevronRight, 
-  FileText, 
-  FunctionSquare,
-  Command,
-  Type,
-  Sigma,
-  Image as ImageIcon,
-  Eraser
+  Settings, PanelLeft, ChevronRight, FileText, FunctionSquare,
+  Command, Type, Sigma, Image as ImageIcon, Eraser
 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 import { check } from '@tauri-apps/plugin-updater';
-import { ask } from '@tauri-apps/plugin-dialog';
-import { relaunch } from '@tauri-apps/plugin-process';
+// 🟢 注意：删除了 ask 和 relaunch 的引用，因为这里不再弹窗了
 
 const { t } = useI18n();
 const route = useRoute();
 const isSidebarOpen = ref(true);
 
+// 🟢 新增：控制是否有更新的状态
+const hasAppUpdate = ref(false);
+
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value;
 };
 
-// 🟢 修改：全部使用 sidebar.* 作为 key
 const menuGroups = computed(() => [
   {
     id: 'text',
@@ -182,7 +179,6 @@ const toggleGroup = (id: string) => {
   collapsedGroups[id] = !collapsedGroups[id];
 };
 
-// 🟢 修改：头部标题映射也改为 sidebar.*
 const currentRouteName = computed(() => {
   switch (route.path) {
     case '/text': return t('sidebar.case_converter');
@@ -195,59 +191,41 @@ const currentRouteName = computed(() => {
 });
 
 onMounted(() => {
+  // 30秒后静默检查更新（给点时间让应用先加载完）
   setTimeout(async () => {
     await backgroundUpdateCheck();
-  }, 60000);
+  }, 30000);
 });
 
+// 🟢 修改：后台检查只更新状态，不弹窗
 const backgroundUpdateCheck = async () => {
   try {
     const update = await check();
-    
     if (update?.available) {
-      // 🟢 修改：更新弹窗文案使用 settings.update.*
-      // 注意：i18n 文件中 settings.update 下是嵌套的
-      const yes = await ask(
-        `${t('settings.update.new_version')}: v${update.version}`, 
-        {
-          title: t('settings.update.title'),
-          kind: 'info',
-          okLabel: t('settings.update.btn_update_now'),
-          cancelLabel: 'Cancel' // i18n中没有通用的Cancel，保留英文或使用 'Later'
-        }
-      );
-
-      if (yes) {
-        await update.downloadAndInstall();
-        await relaunch();
-      }
+      hasAppUpdate.value = true; // 点亮小红点
     }
   } catch (error) {
-    console.error('Auto update check failed:', error);
+    console.error('Silent update check failed:', error);
   }
 };
 </script>
 
 <style>
-/* 样式保持不变 */
 .scale-fade-enter-active,
 .scale-fade-leave-active {
   transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
-
 .scale-fade-enter-from,
 .scale-fade-leave-to {
   opacity: 0;
   transform: scale(0.98);
 }
-
 .expand-enter-active,
 .expand-leave-active {
   transition: all 0.2s ease-in-out;
   max-height: 200px;
   opacity: 1;
 }
-
 .expand-enter-from,
 .expand-leave-to {
   max-height: 0;

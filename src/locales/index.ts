@@ -91,6 +91,8 @@ const messages = {
         btn_check: "Check for Updates",
         error_check: "Check failed",
         error_install: "Install failed",
+        latest_status: "Up to date",
+        is_latest: "Latest",
       }
     },
     // LaTeX 工具
@@ -218,7 +220,9 @@ const messages = {
         btn_update_now: "立即更新",
         btn_check: "检查更新",
         error_check: "检查失败，请检查网络",
-        error_install: "安装失败"
+        error_install: "安装失败",
+        latest_status: "已是最新",
+        is_latest: "最新版"
       }
     },
     // LaTeX 工具

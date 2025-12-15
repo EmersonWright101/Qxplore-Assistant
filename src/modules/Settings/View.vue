@@ -138,59 +138,77 @@
         
         <div class="p-4 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="p-2 rounded-lg transition-colors"
-              :class="hasUpdate ? 'bg-green-50 text-green-600' : 'bg-slate-100 text-slate-600'"
+            <div class="p-2 rounded-lg transition-colors duration-500"
+              :class="[
+                hasUpdate ? 'bg-blue-50 text-blue-600' : '',
+                showLatestFeedback ? 'bg-green-50 text-green-600' : '',
+                !hasUpdate && !showLatestFeedback ? 'bg-slate-100 text-slate-600' : ''
+              ]"
             >
               <Download v-if="hasUpdate" class="w-5 h-5" />
+              <CheckCircle2 v-else-if="showLatestFeedback" class="w-5 h-5 animate-pulse-once" />
               <Zap v-else class="w-5 h-5" />
             </div>
             
             <div class="flex flex-col">
               <span class="font-medium text-slate-700">{{ t('settings.update.software_name') }}</span>
-              <span class="text-xs text-slate-400">
+              <span class="text-xs text-slate-400 transition-colors duration-300" :class="{ 'text-green-600 font-medium': showLatestFeedback }">
                 {{ t('settings.update.current_version') }}: v{{ appVersion }}
-                <span v-if="hasUpdate" class="text-green-600 font-bold ml-1">
+                <span v-if="hasUpdate" class="text-blue-600 font-bold ml-1">
                   ({{ t('settings.update.new_version') }}: v{{ updateManifest?.version }})
+                </span>
+                <span v-if="showLatestFeedback" class="ml-1">
+                  ({{ t('settings.update.is_latest') || 'Latest' }})
                 </span>
               </span>
             </div>
           </div>
 
-          <div class="flex items-center gap-2">
-            
-            <div v-if="updateState === 'checking' || updateState === 'downloading'" class="flex items-center gap-3">
-              <span class="text-xs text-slate-500 font-medium">
-                {{ updateState === 'downloading' 
-                    ? `${t('settings.update.status_downloading')} ${downloadProgress}%` 
-                    : t('settings.update.status_checking') 
-                }}
-              </span>
-              <RefreshCw class="w-4 h-4 text-blue-500 animate-spin" />
-            </div>
+          <div class="flex items-center gap-2 min-w-[140px] justify-end">
+            <Transition name="fade" mode="out-in">
+              
+              <div v-if="updateState === 'checking' || updateState === 'downloading'" class="flex items-center gap-3 px-2">
+                <span class="text-xs text-slate-500 font-medium whitespace-nowrap">
+                  {{ updateState === 'downloading' 
+                      ? `${downloadProgress}%` 
+                      : t('settings.update.status_checking') 
+                  }}
+                </span>
+                <RefreshCw class="w-4 h-4 text-blue-500 animate-spin" />
+              </div>
 
-            <button 
-              v-else-if="hasUpdate"
-              @click="startUpdate"
-              class="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-all shadow-sm hover:shadow-md active:scale-95"
-            >
-              <Download class="w-4 h-4" />
-              <span>{{ t('settings.update.btn_update_now') }}</span>
-            </button>
+              <button 
+                v-else-if="hasUpdate"
+                @click="startUpdate"
+                class="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-all shadow-sm hover:shadow-md active:scale-95"
+              >
+                <Download class="w-4 h-4" />
+                <span>{{ t('settings.update.btn_update_now') }}</span>
+              </button>
 
-            <button 
-              v-else
-              @click="checkForUpdates(true)" 
-              class="px-3 py-1.5 text-sm font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors"
-            >
-              {{ t('settings.update.btn_check') }}
-            </button>
+              <div 
+                v-else-if="showLatestFeedback"
+                class="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-600 border border-green-100 rounded-lg"
+              >
+                <CheckCircle2 class="w-4 h-4" />
+                <span class="text-sm font-medium">{{ t('settings.update.latest_status') || 'Up to date' }}</span>
+              </div>
 
+              <button 
+                v-else
+                @click="checkForUpdates(true)" 
+                class="px-3 py-1.5 text-sm font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors hover:border-slate-300"
+              >
+                {{ t('settings.update.btn_check') }}
+              </button>
+
+            </Transition>
           </div>
         </div>
 
         <div v-if="updateState === 'downloading'" class="h-1 w-full bg-slate-100">
           <div 
-            class="h-full bg-green-500 transition-all duration-300 ease-out"
+            class="h-full bg-blue-500 transition-all duration-300 ease-out"
             :style="{ width: `${downloadProgress}%` }"
           ></div>
         </div>
@@ -208,8 +226,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-
-import { Clock, Timer, Globe, HardDrive, X, RefreshCw, Download, Zap } from 'lucide-vue-next';
+import { 
+  Clock, Timer, Globe, HardDrive, X, 
+  RefreshCw, Download, Zap, CheckCircle2 
+} from 'lucide-vue-next';
 import { settings } from '../../store/settings';
 import { open } from '@tauri-apps/plugin-dialog';
 import { getVersion } from '@tauri-apps/api/app';
@@ -218,15 +238,14 @@ import { relaunch } from '@tauri-apps/plugin-process';
 
 const { t } = useI18n();
 
-// --------------------------------------------------
-// 逻辑：模型文件夹选择
-// --------------------------------------------------
+// ----------------------
+// 模型文件夹选择逻辑
+// ----------------------
 const selectModelFolder = async () => {
   try {
     const selected = await open({
       directory: true,
       multiple: false,
-      // 🟢 修改：settings.ai.select_dialog_title
       title: t('settings.ai.select_dialog_title')
     });
 
@@ -238,15 +257,16 @@ const selectModelFolder = async () => {
   }
 };
 
-// --------------------------------------------------
-// 逻辑：自动更新
-// --------------------------------------------------
+// ----------------------
+// 自动更新逻辑
+// ----------------------
 const appVersion = ref('');
 const updateState = ref<'idle' | 'checking' | 'available' | 'downloading' | 'error'>('idle');
 const hasUpdate = ref(false);
 const updateManifest = ref<any>(null);
 const downloadProgress = ref(0);
 const errorMsg = ref('');
+const showLatestFeedback = ref(false);
 
 onMounted(async () => {
   try {
@@ -260,7 +280,10 @@ onMounted(async () => {
 const checkForUpdates = async (manual: boolean) => {
   if (updateState.value === 'downloading') return;
   
-  if (manual) updateState.value = 'checking';
+  if (manual) {
+    updateState.value = 'checking';
+    showLatestFeedback.value = false;
+  }
   errorMsg.value = '';
 
   try {
@@ -273,12 +296,18 @@ const checkForUpdates = async (manual: boolean) => {
     } else {
       hasUpdate.value = false;
       updateState.value = 'idle';
+      
+      if (manual) {
+        showLatestFeedback.value = true;
+        setTimeout(() => {
+          showLatestFeedback.value = false;
+        }, 3000);
+      }
     }
   } catch (err) {
     console.error(err);
     updateState.value = 'idle';
     if (manual) {
-      // 🟢 修改：settings.update.error_check
       errorMsg.value = t('settings.update.error_check'); 
     }
   }
@@ -306,8 +335,30 @@ const startUpdate = async () => {
   } catch (err: any) {
     console.error(err);
     updateState.value = 'error';
-    // 🟢 修改：settings.update.error_install
     errorMsg.value = `${t('settings.update.error_install')}: ${err.message || err}`;
   }
 };
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.2s ease;
+}
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(5px);
+}
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+@keyframes pulse-once {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.animate-pulse-once {
+  animation: pulse-once 0.3s cubic-bezier(0.4, 0, 0.6, 1);
+}
+</style>
