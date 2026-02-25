@@ -1,10 +1,13 @@
-import  { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 
 import HomeView from '../modules/Home/View.vue'
 import TextConverterView from '../modules/TextConverter/View.vue'
 import SettingsView from '../modules/Settings/View.vue'
 import Latex2Png from '../modules/Latex/latex2png.vue'
 import RemoveBg from '../modules/Image/RemoveBg.vue'
+// 引入新增的打印机组件
+import PrinterView from '../modules/misc/Printer.vue'
+
 
 const router = createRouter({
   // 4. 配置路由模式
@@ -37,6 +40,12 @@ const router = createRouter({
       name: 'RemoveBg',
       component: RemoveBg
     },
+    // 新增的打印预览路由
+    {
+      path: '/misc/printer',
+      name: 'Printer',
+      component: PrinterView
+    }
   ]
 })
 
