@@ -173,9 +173,9 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { 
+import {
   Settings, PanelLeft, ChevronRight, FileText, FunctionSquare,
-  Command, Type, Sigma, Image as ImageIcon, Eraser, Printer, Layers
+  Command, Type, Sigma, Image as ImageIcon, Eraser, Printer, Layers, BookMarked, GraduationCap, Palette, GitCompare
 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 // 🟢 引入全局 Store
@@ -197,7 +197,19 @@ const menuGroups = computed(() => [
     iconColor: 'text-blue-600 group-hover:text-blue-700',
     bgColor: 'bg-blue-50 group-hover:bg-blue-100/80',
     children: [
-      { path: '/text', label: t('sidebar.case_converter') || '大小写转换', icon: Type }
+      { path: '/text', label: t('sidebar.case_converter') || '大小写转换', icon: Type },
+      { path: '/text/diff', label: t('sidebar.diff_viewer') || '文本对比', icon: GitCompare },
+    ]
+  },
+  {
+    id: 'paper',
+    label: t('sidebar.paper_tools') || '论文工具',
+    icon: GraduationCap,
+    iconColor: 'text-rose-600 group-hover:text-rose-700',
+    bgColor: 'bg-rose-50 group-hover:bg-rose-100/80',
+    children: [
+      { path: '/text/bibtex', label: t('sidebar.bibtex_converter') || 'BibTeX 转换', icon: BookMarked },
+      { path: '/paper/color', label: t('sidebar.color_scheme') || '论文配色', icon: Palette },
     ]
   },
   {
@@ -234,6 +246,7 @@ const menuGroups = computed(() => [
 
 const collapsedGroups = reactive<Record<string, boolean>>({
   text: false,
+  paper: false,
   math: false,
   image: false,
   misc: false,
@@ -254,6 +267,9 @@ const handleGroupClick = (id: string) => {
 const currentRouteName = computed(() => {
   switch (route.path) {
     case '/text': return t('sidebar.case_converter') || '大小写转换';
+    case '/text/diff': return t('sidebar.diff_viewer') || '文本对比';
+    case '/text/bibtex': return t('sidebar.bibtex_converter') || 'BibTeX 转换';
+    case '/paper/color': return t('sidebar.color_scheme') || '论文配色';
     case '/async': return t('sidebar.network_test') || '网络测试';
     case '/settings': return t('sidebar.settings') || '设置';
     case '/latex': return t('sidebar.latex2png') || 'LaTeX转图片';

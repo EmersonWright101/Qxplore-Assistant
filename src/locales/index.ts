@@ -21,6 +21,9 @@ const messages = {
       text_manipulation: 'Text Manipulation',
       mathematical_tools: 'Mathematical Tools',
       case_converter: 'Case Converter',
+      bibtex_converter: 'BibTeX Converter',
+      color_scheme: 'Color Palette',
+      paper_tools: 'Paper Tools',
       network_test: 'Network Test',
       settings: 'Settings',
       my_assistant: 'My Assistant',
@@ -29,7 +32,8 @@ const messages = {
       image_processing: 'Image Processing',
       remove_bg: "Remove Background",
       printer: "Printer",
-      misc: "Misc", // 👈 新增这一行
+      misc: "Misc",
+      diff_viewer: "Text Diff",
     },
     // 打印工具
     printer: {
@@ -170,6 +174,64 @@ const messages = {
         uncapitalize: 'Uncapitalize',
       }
     },
+    // BibTeX 转换工具
+    bibtex: {
+      input_label: 'BibTeX Input',
+      input_prompt: 'Paste your BibTeX entry here, e.g.,\n@article{key,\n  author = {Smith, John},\n  title  = {A Great Paper},\n  journal = {Nature},\n  year   = {2024}\n}',
+      output_label: 'Formatted Reference',
+      format_label: 'Citation Format',
+      copy_result: 'Copy Result',
+      no_entries: 'No valid BibTeX entries found',
+      entries_found: '{count} entry | {count} entries',
+      formats: {
+        ieee:   'IEEE',
+        apa:    'APA',
+        gb7714: 'GB/T 7714',
+      },
+    },
+    // 论文配色工具
+    color_scheme: {
+      seed_label: 'Seed Color',
+      scheme_label: 'Harmony Type',
+      palette_label: 'Generated Palette',
+      click_copy: 'Copy',
+      copy_all: 'Copy All Hex',
+      invalid_hex: 'Please enter a valid 6-digit hex color',
+      enter_color_prompt: 'Pick a color above to generate a palette',
+      schemes: {
+        monochromatic: 'Mono',
+        complementary: 'Complement',
+        analogous: 'Analogous',
+        triadic: 'Triadic',
+        tetradic: 'Tetradic',
+      },
+      descriptions: {
+        monochromatic: 'Uses a single hue at varying lightness and saturation levels. Produces a clean, unified look with strong visual hierarchy — ideal for minimalist figures, data tables, and backgrounds where contrast must be subtle.',
+        complementary: 'Pairs two hues directly opposite on the color wheel (180°). Creates bold, high-contrast emphasis great for highlighting key data points, callout boxes, or paired comparisons in charts and infographics.',
+        analogous: 'Selects five neighboring hues (±40°) on the color wheel. The result feels naturally harmonious and easy on the eye — well-suited for multi-series line/bar charts, gradients, or illustrated diagrams with a warm or cool tone.',
+        triadic: 'Distributes three hues evenly at 120° intervals, each paired with a lighter tint. Balances variety with harmony — useful for three-category comparisons, Venn diagrams, or visual frameworks that need clear but cohesive differentiation.',
+        tetradic: 'Places four hues at 90° intervals forming a rectangle on the color wheel. Offers the richest variety; best for complex figures with four distinct categories or multi-panel layouts — requires careful balance to avoid visual clutter.',
+      },
+    },
+    // 文本对比工具
+    diff: {
+      original: 'Original',
+      modified: 'Modified',
+      original_placeholder: 'Paste the original text here...',
+      modified_placeholder: 'Paste the modified text here...',
+      lines: 'lines',
+      unified: 'Unified',
+      split: 'Split',
+      added: 'added',
+      removed: 'removed',
+      unchanged: 'unchanged',
+      no_changes: 'No differences found',
+      empty_prompt: 'Paste text into both panels above to start comparing',
+      copy_diff: 'Copy Diff',
+      col_old: 'Old',
+      col_new: 'New',
+      col_content: 'Content',
+    },
     // 图片处理工具
     image: {
       support_paste: "Support {binding}, drag and drop, or click to upload",
@@ -201,6 +263,9 @@ const messages = {
       text_manipulation: '文本处理',
       mathematical_tools: '数学工具',
       case_converter: '大小写转换',
+      bibtex_converter: 'BibTeX 转换',
+      color_scheme: '论文配色',
+      paper_tools: '论文工具',
       network_test: '网络并发',
       settings: '偏好设置',
       my_assistant: '我的助手',
@@ -209,7 +274,8 @@ const messages = {
       image_processing: "图像处理",
       remove_bg: "背景消除",
       printer: "打印助手",
-      misc: "杂项", // 👈 新增这一行
+      misc: "杂项",
+      diff_viewer: "文本对比",
     },
     // 打印工具
     printer: {
@@ -349,6 +415,64 @@ const messages = {
         lowerCamelCase: '小驼峰',
         uncapitalize: '首字母小写',
       }
+    },
+    // BibTeX 转换工具
+    bibtex: {
+      input_label: 'BibTeX 输入',
+      input_prompt: '在此粘贴 BibTeX 条目，例如：\n@article{key,\n  author = {Smith, John},\n  title  = {A Great Paper},\n  journal = {Nature},\n  year   = {2024}\n}',
+      output_label: '格式化参考文献',
+      format_label: '引用格式',
+      copy_result: '复制结果',
+      no_entries: '未找到有效的 BibTeX 条目',
+      entries_found: '已识别 {count} 条条目',
+      formats: {
+        ieee:   'IEEE',
+        apa:    'APA',
+        gb7714: 'GB/T 7714',
+      },
+    },
+    // 论文配色工具
+    color_scheme: {
+      seed_label: '种子颜色',
+      scheme_label: '和谐类型',
+      palette_label: '生成的配色方案',
+      click_copy: '点击复制',
+      copy_all: '复制全部 Hex',
+      invalid_hex: '请输入有效的6位十六进制颜色',
+      enter_color_prompt: '在上方选择颜色以生成配色方案',
+      schemes: {
+        monochromatic: '单色',
+        complementary: '互补',
+        analogous: '类比',
+        triadic: '三角',
+        tetradic: '四方',
+      },
+      descriptions: {
+        monochromatic: '基于单一色相，通过改变明度和饱和度产生系列变体。风格统一、层次清晰，适合极简图表、数据表格或需要低调对比的背景配色。',
+        complementary: '取色轮上相距 180° 的两种对立色相。对比强烈、视觉冲击力大，适合突出关键数据点、对比图、标注框，以及需要强调主次关系的信息图。',
+        analogous: '从色轮上选取相邻的五个色相（±40°）。色彩过渡自然、视觉舒适，适合多系列折线图/柱状图、渐变插图，或需要统一暖色调/冷色调氛围的学术图表。',
+        triadic: '在色轮上以 120° 等间距分布三个色相，每个色相再配一个浅色调。既有丰富变化，又保持整体和谐，适合三类别对比图、维恩图，或需要清晰区分又不显突兀的视觉框架。',
+        tetradic: '在色轮上以 90° 间距分布四个色相，构成矩形关系。色彩种类最丰富，适合四类别复杂图表或多面板布局，但需注意面积平衡，避免视觉混乱。',
+      },
+    },
+    // 文本对比工具
+    diff: {
+      original: '原始文本',
+      modified: '修改文本',
+      original_placeholder: '在此粘贴原始文本...',
+      modified_placeholder: '在此粘贴修改后的文本...',
+      lines: '行',
+      unified: '合并视图',
+      split: '分栏视图',
+      added: '行新增',
+      removed: '行删除',
+      unchanged: '行未变',
+      no_changes: '未发现差异',
+      empty_prompt: '在上方两个面板中粘贴文本以开始对比',
+      copy_diff: '复制差异',
+      col_old: '原始行',
+      col_new: '新增行',
+      col_content: '内容',
     },
     // 图片处理工具
     image: {

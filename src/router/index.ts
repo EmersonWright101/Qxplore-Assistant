@@ -2,18 +2,18 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import HomeView from '../modules/Home/View.vue'
 import TextConverterView from '../modules/TextConverter/View.vue'
+import BibtexConverter from '../modules/Paper/BibtexConverter.vue'
+import ColorSchemeView from '../modules/Paper/ColorScheme.vue'
 import SettingsView from '../modules/Settings/View.vue'
 import Latex2Png from '../modules/Latex/latex2png.vue'
 import RemoveBg from '../modules/Image/RemoveBg.vue'
+import DiffViewer from '../modules/TextConverter/DiffViewer.vue'
 // 引入新增的打印机组件
-import PrinterView from '../modules/misc/Printer.vue'
+import PrinterView from '../modules/Misc/Printer.vue'
 
 
 const router = createRouter({
-  // 4. 配置路由模式
   history: createWebHistory(),
-  
-  // 5. 定义路由表（核心部分）
   routes: [
     {
       path: '/',
@@ -21,9 +21,14 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/text',      // 浏览器地址栏显示 /text 时
+      path: '/text',
       name: 'text-converter',
-      component: TextConverterView // 显示这个组件
+      component: TextConverterView
+    },
+    {
+      path: '/text/bibtex',
+      name: 'bibtex-converter',
+      component: BibtexConverter
     },
     {
       path: '/settings',
@@ -40,11 +45,20 @@ const router = createRouter({
       name: 'RemoveBg',
       component: RemoveBg
     },
-    // 新增的打印预览路由
+    {
+      path: '/paper/color',
+      name: 'ColorScheme',
+      component: ColorSchemeView
+    },
     {
       path: '/misc/printer',
       name: 'Printer',
       component: PrinterView
+    },
+    {
+      path: '/text/diff',
+      name: 'DiffViewer',
+      component: DiffViewer
     }
   ]
 })
