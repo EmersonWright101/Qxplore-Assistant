@@ -448,7 +448,7 @@ const processPdf = async (file: File) => {
       canvas.width = viewport.width;
       canvas.height = viewport.height;
 
-      await page.render({ canvasContext: ctx, viewport }).promise;
+      await page.render({ canvas, canvasContext: ctx, viewport }).promise;
       pdfPageImages.value[pageNum] = canvas.toDataURL('image/jpeg', 0.85);
     }
   } catch (error) {

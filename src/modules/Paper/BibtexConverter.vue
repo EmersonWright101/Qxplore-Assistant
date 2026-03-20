@@ -107,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Clipboard, Check, XCircle, AlertCircle } from 'lucide-vue-next';
 import { formatBibtex, parseBibtex, type CitationFormat } from './bibtexConverter';
@@ -154,9 +154,12 @@ const switchFormat = (fmt: CitationFormat) => {
 
 onMounted(() => {
   setTimeout(() => nextTick(updateGlider), 100);
+  window.addEventListener('resize', updateGlider);
 });
 
-window.addEventListener('resize', updateGlider);
+onUnmounted(() => {
+  window.removeEventListener('resize', updateGlider);
+});
 
 const copyToClipboard = () => {
   if (!resultText.value || copied.value) return;

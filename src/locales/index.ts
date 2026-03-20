@@ -177,7 +177,7 @@ const messages = {
     // BibTeX 转换工具
     bibtex: {
       input_label: 'BibTeX Input',
-      input_prompt: 'Paste your BibTeX entry here, e.g.,\n@article{key,\n  author = {Smith, John},\n  title  = {A Great Paper},\n  journal = {Nature},\n  year   = {2024}\n}',
+      input_prompt: 'Paste your BibTeX entries here...',
       output_label: 'Formatted Reference',
       format_label: 'Citation Format',
       copy_result: 'Copy Result',
@@ -419,7 +419,7 @@ const messages = {
     // BibTeX 转换工具
     bibtex: {
       input_label: 'BibTeX 输入',
-      input_prompt: '在此粘贴 BibTeX 条目，例如：\n@article{key,\n  author = {Smith, John},\n  title  = {A Great Paper},\n  journal = {Nature},\n  year   = {2024}\n}',
+      input_prompt: '在此粘贴 BibTeX 条目...',
       output_label: '格式化参考文献',
       format_label: '引用格式',
       copy_result: '复制结果',
