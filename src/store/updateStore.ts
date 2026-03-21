@@ -41,7 +41,7 @@ export const checkForUpdates = async (manual: boolean) => {
   try {
     const update = await check();
 
-    if (update?.available) {
+    if (update) {
       updateStore.hasUpdate = true;
       updateStore.newVersion = update.version;
       updateManifest.value = update; // 存入 shallowRef
@@ -114,6 +114,8 @@ export const startUpdate = async () => {
     await relaunch();
 
   } catch (err: any) {
-    // ... 错误处理不变
+    console.error(err);
+    updateStore.state = 'error';
+    updateStore.errorMsg = 'Update failed: ' + (err.message || err);
   }
 };

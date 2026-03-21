@@ -96,3 +96,20 @@ jobs:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           # 这里会引用 matrix 中定义的参数（例如 --target aarch64-apple-darwin）
           args: ${{ matrix.args }}
+
+  publish-release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    needs: [create-release, build-tauri]
+    steps:
+      - name: publish release
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: ${{ needs.create-release.outputs.release_id }},
+              draft: false,
+            })
