@@ -191,7 +191,10 @@ const messages = {
     },
     // 论文配色工具
     color_scheme: {
+      harmony_section_label: 'Custom Harmony Generator',
+      harmony_section_desc: 'Enter a seed color to generate a harmonious palette based on color theory.',
       seed_label: 'Seed Color',
+      quick_pick: 'Quick Pick',
       scheme_label: 'Harmony Type',
       palette_label: 'Generated Palette',
       click_copy: 'Copy',
@@ -211,6 +214,93 @@ const messages = {
         analogous: 'Selects five neighboring hues (±40°) on the color wheel. The result feels naturally harmonious and easy on the eye — well-suited for multi-series line/bar charts, gradients, or illustrated diagrams with a warm or cool tone.',
         triadic: 'Distributes three hues evenly at 120° intervals, each paired with a lighter tint. Balances variety with harmony — useful for three-category comparisons, Venn diagrams, or visual frameworks that need clear but cohesive differentiation.',
         tetradic: 'Places four hues at 90° intervals forming a rectangle on the color wheel. Offers the richest variety; best for complex figures with four distinct categories or multi-panel layouts — requires careful balance to avoid visual clutter.',
+      },
+      cultural: {
+        section_label: 'Cultural Style Palettes',
+        section_desc: 'Curated palettes drawn from Chinese cultural heritage. Each set is tuned for aesthetic coherence and print legibility in academic papers.',
+        copy_palette: 'Copy All',
+        cultures: {
+          huizhou: 'Huizhou',
+          forbidden_city: 'Forbidden City',
+          dunhuang: 'Dunhuang',
+          tibet: 'Tibet',
+          mongolia: 'Mongolia',
+          lingnan: 'Lingnan',
+        },
+        palettes: {
+          huizhou_ink: {
+            name: 'Ink Wash Mountains',
+            desc: 'Charcoal ink, mountain mist, and aged paper — the essential tones of Huizhou brush painting, evoking the melancholic, mist-shrouded peaks of southern Anhui.',
+          },
+          huizhou_village: {
+            name: 'White Wall Dark Tile',
+            desc: 'The defining palette of Huizhou vernacular architecture: cool slate rooftiles against chalk-white walls and warm brown timber — restraint and contrast in perfect equilibrium.',
+          },
+          huizhou_xin_an: {
+            name: 'Xin An River Valley',
+            desc: 'Deep pine and sage greens of the valley forests, cool river teal, and warm riverbank sandstone — a serene, grounded palette drawn from the Xin An waterway.',
+          },
+          fc_vermilion: {
+            name: 'Vermilion Splendor',
+            desc: 'Deep vermilion walls, russet lacquer, amber ornaments, and pale gold — the warm ceremonial spectrum of the Forbidden City, muted here for scholarly use.',
+          },
+          fc_imperial: {
+            name: 'Imperial Blue and Gold',
+            desc: 'The cool deep navy of imperial robes paired with glazed sky-blue tiles and burnished gold accents — a palette of measured authority and celestial order.',
+          },
+          fc_jade: {
+            name: 'Palace Jade Garden',
+            desc: 'The subdued jades of imperial scholar stones, aged bronze ritual vessels, and moss-covered garden walls — quiet, refined tones well-suited to complex multi-series figures.',
+          },
+          dh_apsaras: {
+            name: 'Flying Apsaras',
+            desc: 'Warm ocher red, fired clay, mineral amber, and deep lapis blue — the natural mineral pigments of the Dunhuang cave murals, vivid yet grounded across fifteen centuries.',
+          },
+          dh_grotto: {
+            name: 'Ancient Grotto',
+            desc: 'Dark umber, layered brown, warm tan, and weathered sage — the palette of centuries-old pigment and stone in the Mogao Caves, muted by time into archaeological depth.',
+          },
+          dh_oasis: {
+            name: 'Crescent Spring',
+            desc: 'Deep water blue, oasis teal, pale aqua, and sun-bleached sand gold — the stark, beautiful contrast of Crescent Lake against the surrounding Gobi desert.',
+          },
+          tb_potala: {
+            name: 'Potala Palace',
+            desc: 'Monastery crimson rising from white stone base, accented by saffron robes and burnished gold, set against the brilliant cobalt blue of the high-altitude Lhasa sky.',
+          },
+          tb_sky: {
+            name: 'Snow Domain Sky',
+            desc: 'From deep midnight cobalt to bright cerulean noon, layered with glacier-stone silver and the pale blue-white of eternal snow — the clarifying light of the Tibetan Plateau.',
+          },
+          tb_thangka: {
+            name: 'Thangka Lapis',
+            desc: 'The lapis lazuli blues of Tibetan Buddhist scroll paintings — midnight indigo deepening to sky azure, anchored by burnished gold leaf and aged ceremonial cloth.',
+          },
+          mg_sky: {
+            name: 'Steppe and Sky',
+            desc: 'The signature contrast of the Mongolian steppe: vast cobalt sky grading from deep midnight to pale noon blue, meeting warm ochre earth and the pale horizon.',
+          },
+          mg_grassland: {
+            name: 'Vast Grassland',
+            desc: 'From deep shadow-green under the grassland canopy to bright sage and straw — the layered greens and yellows of summer pasture stretching to the horizon.',
+          },
+          mg_campfire: {
+            name: 'Ger and Campfire',
+            desc: 'Dark charcoal earth, sun-baked clay, warm camel tan, milky tea, and white felt — the intimate, grounded warmth of a Mongolian ger encampment at dusk.',
+          },
+          ln_architecture: {
+            name: 'Gray Brick Green Tile',
+            desc: 'The cool, layered palette of Cantonese vernacular architecture: dark gray brick, weathered stone-green mortar, glazed green roof tile, and pale lime-washed wall.',
+          },
+          ln_kapok: {
+            name: 'Kapok Red',
+            desc: 'The city tree of Guangzhou in full bloom — deep vermilion, warm brick, amber-gold, pale straw, and ivory — the warm, festive color of a Lingnan spring.',
+          },
+          ln_pearl_river: {
+            name: 'Pearl River',
+            desc: 'The tidal blue of the Pearl River delta — deep harbor navy, water blue, pale aqua, and reed-bed sage under soft southern light.',
+          },
+        },
       },
     },
     // 文本对比工具
@@ -433,7 +523,10 @@ const messages = {
     },
     // 论文配色工具
     color_scheme: {
+      harmony_section_label: '自定义配色生成',
+      harmony_section_desc: '输入种子颜色，基于色彩理论生成和谐配色方案。',
       seed_label: '种子颜色',
+      quick_pick: '快速选色',
       scheme_label: '和谐类型',
       palette_label: '生成的配色方案',
       click_copy: '点击复制',
@@ -453,6 +546,93 @@ const messages = {
         analogous: '从色轮上选取相邻的五个色相（±40°）。色彩过渡自然、视觉舒适，适合多系列折线图/柱状图、渐变插图，或需要统一暖色调/冷色调氛围的学术图表。',
         triadic: '在色轮上以 120° 等间距分布三个色相，每个色相再配一个浅色调。既有丰富变化，又保持整体和谐，适合三类别对比图、维恩图，或需要清晰区分又不显突兀的视觉框架。',
         tetradic: '在色轮上以 90° 间距分布四个色相，构成矩形关系。色彩种类最丰富，适合四类别复杂图表或多面板布局，但需注意面积平衡，避免视觉混乱。',
+      },
+      cultural: {
+        section_label: '文化风格配色',
+        section_desc: '取材于中华文化遗产的精选配色组合，兼顾美学协调性与学术论文的印刷可读性。',
+        copy_palette: '复制全部',
+        cultures: {
+          huizhou: '徽州文化',
+          forbidden_city: '故宫文化',
+          dunhuang: '敦煌壁画',
+          tibet: '西藏高原',
+          mongolia: '蒙古草原',
+          lingnan: '岭南文化',
+        },
+        palettes: {
+          huizhou_ink: {
+            name: '山水墨韵',
+            desc: '炭墨、山岚与宣纸——徽州水墨山水画的色彩精髓，凝结了皖南山地清冷湿润的笔墨意境。',
+          },
+          huizhou_village: {
+            name: '白墙黛瓦',
+            desc: '徽州民居的视觉标志：深灰石板屋顶与粉白院墙相映，辅以岁月熏染的木棕——建筑克制哲学凝练成调色盘。',
+          },
+          huizhou_xin_an: {
+            name: '新安山色',
+            desc: '新安江流域的深松绿、林间嫩绿、山岚青碧与河岸暖石，构成一组宁静致远的山水配色。',
+          },
+          fc_vermilion: {
+            name: '朱红华彩',
+            desc: '深朱砂红宫墙、赤褐漆器、琥珀铜饰与淡金彩绘——故宫温暖礼仪色系，降低饱和度后适合学术使用。',
+          },
+          fc_imperial: {
+            name: '帝青金阙',
+            desc: '藏蓝朝服搭配蓝绿釉顶与磨砂金色御器，构成一组度量有据、秩序天然的宫廷配色。',
+          },
+          fc_jade: {
+            name: '宫廷墨绿',
+            desc: '文人赏石的静默翠色、青铜礼器的古朴厚重与御苑苔痕——一组低调精致、适合多系列图表的宫廷配色。',
+          },
+          dh_apsaras: {
+            name: '飞天彩绘',
+            desc: '暖赭红、陶红、矿物琥珀与石青蓝——敦煌洞窟壁画中天然矿物颜料的精髓，历经十五个世纪沉淀而成。',
+          },
+          dh_grotto: {
+            name: '石窟千年',
+            desc: '深棕、暖褐、砖黄与风化灰绿——莫高窟壁面上经年累月的颜料与岩石，被岁月研磨成考古质感的色调。',
+          },
+          dh_oasis: {
+            name: '月牙春晓',
+            desc: '深水蓝、绿洲碧、浅青与沙金——月牙泉碧水与戈壁沙丘之间的绝境对照，苍凉而生机并存。',
+          },
+          tb_potala: {
+            name: '布达拉宫',
+            desc: '白色基座之上的寺庙深红宫墙、藏红花色袍服与贴金屋顶，映衬着拉萨高原澄净的钴蓝天空。',
+          },
+          tb_sky: {
+            name: '雪域天空',
+            desc: '从深夜钴蓝到正午湛蓝，叠加冰川灰银与亘古积雪的苍白——高原纯净大气独有的蓝色层次。',
+          },
+          tb_thangka: {
+            name: '唐卡石青',
+            desc: '藏传佛教唐卡绘画中的青金石色——从午夜深蓝递进至天空湛青，以磨砂金箔与斑驳祭礼织物为底色收尾。',
+          },
+          mg_sky: {
+            name: '天穹草原',
+            desc: '蒙古草原最具标志性的视觉对比：深夜钴蓝到正午苍蓝的辽阔天穹，与黄土地平线和苍茫远天相接。',
+          },
+          mg_grassland: {
+            name: '苍茫草地',
+            desc: '从草甸深阴下的浓绿到阳光中的嫩草与枯黄——夏日牧场延伸至天际的绿色层次，沉静而广阔。',
+          },
+          mg_campfire: {
+            name: '毡帐篝火',
+            desc: '深炭土、黄泥、骆驼棕、奶茶色与毡房白——蒙古包营地黄昏时分亲密温暖的内敛色调。',
+          },
+          ln_architecture: {
+            name: '青砖绿瓦',
+            desc: '广府传统建筑的冷静层次：深灰青砖、风化石绿泥缝、釉绿瓦面与石灰粉白墙——克制而有质感。',
+          },
+          ln_kapok: {
+            name: '木棉春晓',
+            desc: '广州市花木棉盛放时节——深红棉红、砖红、琥珀棕、淡金与象牙，岭南春日热烈而温暖的色调。',
+          },
+          ln_pearl_river: {
+            name: '珠江水色',
+            desc: '珠三角潮汐水系的蓝色色谱——港湾深蓝、江水蓝、浅碧与苇荡绿灰，柔和南方光线下的水色印象。',
+          },
+        },
       },
     },
     // 文本对比工具
