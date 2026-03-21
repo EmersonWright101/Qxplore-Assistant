@@ -17,7 +17,9 @@ pub fn run() {
     // 手机端会自动跳过这段代码，防止报错
     #[cfg(desktop)]
     {
-        builder = builder.plugin(tauri_plugin_window_state::Builder::default().build());
+        builder = builder
+            .plugin(tauri_plugin_window_state::Builder::default().build())
+            .plugin(tauri_plugin_process::init());
     }
 
     // 3. 运行应用

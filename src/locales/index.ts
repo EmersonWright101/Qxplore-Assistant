@@ -102,6 +102,17 @@ const messages = {
     home: {
       start_work: 'Start Work',
       subtitle: '"Your personal workspace for efficiency."',
+      quick_launch: 'Quick Launch',
+      features: {
+        text:      { desc: 'Case convert, sort and clean text' },
+        bibtex:    { desc: 'Format academic references' },
+        diff:      { desc: 'Compare text side by side' },
+        stats:     { desc: 'Word count and char analysis' },
+        color:     { desc: 'Academic color palette generator' },
+        latex:     { desc: 'Render math equations to PNG' },
+        remove_bg: { desc: 'AI-powered background removal' },
+        printer:   { desc: 'Generate network print commands' },
+      },
       greeting: {
         morning: 'Good Morning',
         afternoon: 'Good Afternoon',
@@ -460,7 +471,18 @@ const messages = {
     // 首页
     home: {
       start_work: '开始工作',
-      subtitle: '“专属于你的高效工作台。”',
+      subtitle: '”专属于你的高效工作台。”',
+      quick_launch: '快速启动',
+      features: {
+        text:      { desc: '大小写转换、排序与文本清理' },
+        bibtex:    { desc: '学术参考文献格式化' },
+        diff:      { desc: '对比两段文本的差异' },
+        stats:     { desc: '字数统计与字符分析' },
+        color:     { desc: '学术论文配色方案生成' },
+        latex:     { desc: '数学公式渲染为图片' },
+        remove_bg: { desc: 'AI 智能背景去除' },
+        printer:   { desc: '生成网络打印命令' },
+      },
       greeting: {
         morning: '早上好',
         afternoon: '下午好',
