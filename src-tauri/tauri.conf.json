@@ -39,7 +39,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ1Q0Q3MUFCRDIyQTFBNDAKUldSQUdpclNxM0hOUld2dUhVNDcwSHc1cUdKRGdnck12L2MvL1JFZGp6NzcyQ3YwaVJkZEdkclQK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEEzNURFQjFBMzM4Qjc2RDAKUldUUWRvc3pHdXRkbzR0NCtvVmRjNFJzWlBPaWM3clQ4YUlYa2lpc0N1dUpxNTk2YmorR3VnTXUK",
       "endpoints": [
         "https://github.com/EmersonWright101/Qxplore-Assistant/releases/latest/download/latest.json"
       ]
