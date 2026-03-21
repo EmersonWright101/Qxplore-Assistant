@@ -34,6 +34,7 @@ const messages = {
       printer: "Printer",
       misc: "Misc",
       diff_viewer: "Text Diff",
+      text_stats: "Text Statistics",
     },
     // 打印工具
     printer: {
@@ -303,6 +304,32 @@ const messages = {
         },
       },
     },
+    // 文本统计工具
+    stats: {
+      source: 'Source Text',
+      input_prompt: 'Paste or type your text here...',
+      no_content: 'Enter text above to see statistics',
+      overview: 'Overview',
+      text_analysis: 'Text Analysis',
+      top_words_label: 'Top Keywords',
+      chars_total: 'Characters',
+      chars_no_spaces: 'No Spaces',
+      chars_unit: 'chars',
+      words: 'Words',
+      chinese_chars: 'CJK Characters',
+      lines: 'Lines',
+      sentences: 'Sentences',
+      paragraphs: 'Paragraphs',
+      reading_time: 'Reading Time',
+      unique_words: 'Unique Words',
+      avg_word_len: 'Avg Word Length',
+      avg_sent_len: 'Avg Sentence Length',
+      longest_word: 'Longest Word',
+      punctuation: 'Punctuation',
+      digits: 'Digits',
+      lexical_density: 'Lexical Density',
+      copy_stats: 'Copy Summary',
+    },
     // 文本对比工具
     diff: {
       original: 'Original',
@@ -366,6 +393,7 @@ const messages = {
       printer: "打印助手",
       misc: "杂项",
       diff_viewer: "文本对比",
+      text_stats: "文本统计",
     },
     // 打印工具
     printer: {
@@ -634,6 +662,32 @@ const messages = {
           },
         },
       },
+    },
+    // 文本统计工具
+    stats: {
+      source: '输入文本',
+      input_prompt: '在此粘贴或输入文本...',
+      no_content: '在上方输入文本后查看统计数据',
+      overview: '概览',
+      text_analysis: '文本分析',
+      top_words_label: '关键词频',
+      chars_total: '字符数',
+      chars_no_spaces: '去除空格',
+      chars_unit: '字符',
+      words: '词数',
+      chinese_chars: '汉字数',
+      lines: '行数',
+      sentences: '句子数',
+      paragraphs: '段落数',
+      reading_time: '阅读时间',
+      unique_words: '独特词汇',
+      avg_word_len: '平均词长',
+      avg_sent_len: '句均词数',
+      longest_word: '最长单词',
+      punctuation: '标点符号',
+      digits: '数字',
+      lexical_density: '词汇密度',
+      copy_stats: '复制摘要',
     },
     // 文本对比工具
     diff: {

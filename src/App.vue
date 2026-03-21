@@ -175,7 +175,7 @@ import { ref, computed, reactive, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import {
   Settings, PanelLeft, ChevronRight, FileText, FunctionSquare,
-  Command, Type, Sigma, Image as ImageIcon, Eraser, Printer, Layers, BookMarked, GraduationCap, Palette, GitCompare
+  Command, Type, Sigma, Image as ImageIcon, Eraser, Printer, Layers, BookMarked, GraduationCap, Palette, GitCompare, BarChart2
 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 // 🟢 引入全局 Store
@@ -199,6 +199,7 @@ const menuGroups = computed(() => [
     children: [
       { path: '/text', label: t('sidebar.case_converter') || '大小写转换', icon: Type },
       { path: '/text/diff', label: t('sidebar.diff_viewer') || '文本对比', icon: GitCompare },
+      { path: '/text/stats', label: t('sidebar.text_stats') || '文本统计', icon: BarChart2 },
     ]
   },
   {
@@ -268,6 +269,7 @@ const currentRouteName = computed(() => {
   switch (route.path) {
     case '/text': return t('sidebar.case_converter') || '大小写转换';
     case '/text/diff': return t('sidebar.diff_viewer') || '文本对比';
+    case '/text/stats': return t('sidebar.text_stats') || '文本统计';
     case '/text/bibtex': return t('sidebar.bibtex_converter') || 'BibTeX 转换';
     case '/paper/color': return t('sidebar.color_scheme') || '论文配色';
     case '/async': return t('sidebar.network_test') || '网络测试';

@@ -8,6 +8,7 @@ import SettingsView from '../modules/Settings/View.vue'
 import Latex2Png from '../modules/Latex/latex2png.vue'
 import RemoveBg from '../modules/Image/RemoveBg.vue'
 import DiffViewer from '../modules/TextConverter/DiffViewer.vue'
+import TextStats from '../modules/TextConverter/TextStats.vue'
 // 引入新增的打印机组件
 import PrinterView from '../modules/Misc/Printer.vue'
 
@@ -59,6 +60,11 @@ const router = createRouter({
       path: '/text/diff',
       name: 'DiffViewer',
       component: DiffViewer
+    },
+    {
+      path: '/text/stats',
+      name: 'TextStats',
+      component: TextStats
     }
   ]
 })
