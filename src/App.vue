@@ -175,7 +175,7 @@ import { ref, computed, reactive, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import {
   Settings, PanelLeft, ChevronRight, FileText, FunctionSquare,
-  Command, Type, Sigma, Image as ImageIcon, Eraser, Printer, Layers, BookMarked, GraduationCap, Palette, GitCompare, BarChart2
+  Command, Type, Sigma, Film, Eraser, Printer, Layers, BookMarked, GraduationCap, Palette, GitCompare, BarChart2
 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 // 🟢 引入全局 Store
@@ -224,13 +224,13 @@ const menuGroups = computed(() => [
     ]
   },
   {
-    id: 'image',
-    label: t('sidebar.image_processing') || '图像处理',
-    icon: ImageIcon,
+    id: 'media',
+    label: t('sidebar.media_processing') || '媒体处理',
+    icon: Film,
     iconColor: 'text-purple-600 group-hover:text-purple-700',
     bgColor: 'bg-purple-50 group-hover:bg-purple-100/80',
     children: [
-      { path: '/image/remove-bg', label: t('sidebar.remove_bg') || '移除背景', icon: Eraser }
+      { path: '/media/remove-bg', label: t('sidebar.remove_bg') || '移除背景', icon: Eraser },
     ]
   },
   {
@@ -249,7 +249,7 @@ const collapsedGroups = reactive<Record<string, boolean>>({
   text: false,
   paper: false,
   math: false,
-  image: false,
+  media: false,
   misc: false,
 });
 
@@ -275,7 +275,7 @@ const currentRouteName = computed(() => {
     case '/async': return t('sidebar.network_test') || '网络测试';
     case '/settings': return t('sidebar.settings') || '设置';
     case '/latex': return t('sidebar.latex2png') || 'LaTeX转图片';
-    case '/image/remove-bg': return t('sidebar.remove_bg') || '移除背景';
+    case '/media/remove-bg': return t('sidebar.remove_bg') || '移除背景';
     case '/misc/printer': return t('sidebar.printer') || '打印';
     default: return '';
   }

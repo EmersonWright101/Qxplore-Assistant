@@ -1,12 +1,12 @@
 <template>
-  <div class="relative w-full min-h-full flex flex-col items-center justify-center select-none bg-slate-50/50">
+  <div class="relative w-full min-h-full flex flex-col select-none bg-slate-50/50">
     <!-- Background blobs -->
     <div class="fixed top-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-400/15 rounded-full blur-[120px] mix-blend-multiply animate-blob pointer-events-none z-0"></div>
     <div class="fixed bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-purple-400/15 rounded-full blur-[120px] mix-blend-multiply animate-blob animation-delay-2000 pointer-events-none z-0"></div>
     <div class="fixed top-[30%] right-[20%] w-[400px] h-[400px] bg-pink-300/10 rounded-full blur-[100px] mix-blend-multiply animate-blob animation-delay-4000 pointer-events-none z-0"></div>
 
-    <!-- Content: max-width centered, pt-14 clears the floating h-12 nav button -->
-    <div class="relative z-10 w-full max-w-4xl px-7 pt-14 pb-10 flex flex-col gap-0">
+    <!-- Content: fills available height, distributes space -->
+    <div class="relative z-10 w-full max-w-5xl mx-auto px-7 pt-14 pb-6 flex flex-col flex-1 min-h-0 gap-0">
 
       <!-- ── Header ── -->
       <div
@@ -67,36 +67,39 @@
       <!-- ── Divider ── -->
       <div class="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
 
-      <!-- ── Solar term strip ── -->
+      <!-- ── Progress strips (side by side) ── -->
       <div
         class="py-2.5 opacity-0 animate-fade-in-up"
         style="animation-delay:0.18s;animation-fill-mode:forwards;"
       >
-        <div class="flex items-center gap-3">
-          <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0">{{ prevSolarTerm }}</span>
-          <div class="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-            <div
-              class="h-full rounded-full bg-gradient-to-r from-emerald-300 to-teal-300 transition-all duration-1000 ease-out"
-              :style="{ width: solarTermProgress + '%' }"
-            ></div>
+        <div class="flex gap-4">
+          <!-- Solar term -->
+          <div class="flex-1 flex items-center gap-2.5">
+            <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0">{{ prevSolarTerm }}</span>
+            <div class="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+              <div
+                class="h-full rounded-full bg-gradient-to-r from-emerald-300 to-teal-300 transition-all duration-1000 ease-out"
+                :style="{ width: solarTermProgress + '%' }"
+              ></div>
+            </div>
+            <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 shrink-0">{{ nextSolarTerm }}</span>
+            <span class="text-xs text-slate-400 shrink-0 min-w-[3.5em] text-right">{{ daysUntilNextTerm }}天后</span>
           </div>
-          <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 shrink-0">{{ nextSolarTerm }}</span>
-          <span class="text-xs text-slate-400 shrink-0 min-w-[3.5em] text-right">{{ daysUntilNextTerm }} 天后</span>
-        </div>
-      </div>
 
-      <!-- ── Year progress strip ── -->
-      <div class="pb-2.5">
-        <div class="flex items-center gap-3">
-          <span class="text-xs text-slate-400 shrink-0 min-w-[3em]">{{ currentYear }}年</span>
-          <div class="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-            <div
-              class="h-full rounded-full bg-gradient-to-r from-amber-300 to-orange-300 transition-all duration-1000 ease-out"
-              :style="{ width: yearProgress + '%' }"
-            ></div>
+          <div class="w-px bg-slate-200 shrink-0"></div>
+
+          <!-- Year progress -->
+          <div class="flex-1 flex items-center gap-2.5">
+            <span class="text-xs text-slate-400 shrink-0">{{ currentYear }}年</span>
+            <div class="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+              <div
+                class="h-full rounded-full bg-gradient-to-r from-amber-300 to-orange-300 transition-all duration-1000 ease-out"
+                :style="{ width: yearProgress + '%' }"
+              ></div>
+            </div>
+            <span class="text-xs text-slate-400 shrink-0">{{ yearProgress }}%</span>
+            <span class="text-xs text-slate-400 shrink-0 min-w-[4em] text-right">剩{{ yearDaysLeft }}天</span>
           </div>
-          <span class="text-xs text-slate-400 shrink-0">{{ yearProgress }}%</span>
-          <span class="text-xs text-slate-400 shrink-0 min-w-[4.5em] text-right">还剩 {{ yearDaysLeft }} 天</span>
         </div>
       </div>
 
@@ -105,25 +108,25 @@
 
       <!-- ── Quick Launch cards ── -->
       <div
-        class="pt-4 opacity-0 animate-fade-in-up"
+        class="pt-4 flex flex-col opacity-0 animate-fade-in-up"
         style="animation-delay:0.28s;animation-fill-mode:forwards;"
       >
         <p class="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">
           {{ t('home.quick_launch') }}
         </p>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="grid grid-cols-4 gap-3">
           <router-link
             v-for="f in features"
             :key="f.path"
             :to="f.path"
             class="group flex flex-col gap-3 p-5 rounded-2xl bg-white/60 backdrop-blur-sm border border-white/80 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200"
           >
-            <div :class="`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm ${f.color}`">
+            <div :class="`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0 ${f.color}`">
               <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path :d="f.icon" />
               </svg>
             </div>
-            <div class="flex flex-col gap-1">
+            <div class="flex flex-col gap-1 min-h-0">
               <div class="text-sm font-semibold text-slate-700 group-hover:text-slate-900 leading-tight">{{ t(f.name) }}</div>
               <div class="text-xs text-slate-400 leading-relaxed">{{ t(f.desc) }}</div>
             </div>
@@ -174,7 +177,7 @@ const features = [
   { path: '/text/stats',      name: 'sidebar.text_stats',        desc: 'home.features.stats.desc',     color: 'bg-teal-500',   icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
   { path: '/paper/color',     name: 'sidebar.color_scheme',      desc: 'home.features.color.desc',     color: 'bg-violet-500', icon: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01' },
   { path: '/latex',           name: 'sidebar.latex2png',         desc: 'home.features.latex.desc',     color: 'bg-purple-500', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
-  { path: '/image/remove-bg', name: 'sidebar.remove_bg',         desc: 'home.features.remove_bg.desc', color: 'bg-pink-500',   icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
+  { path: '/media/remove-bg', name: 'sidebar.remove_bg',         desc: 'home.features.remove_bg.desc', color: 'bg-pink-500',   icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
   { path: '/misc/printer',    name: 'sidebar.printer',           desc: 'home.features.printer.desc',   color: 'bg-orange-500', icon: 'M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z' },
 ];
 

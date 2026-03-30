@@ -12,6 +12,11 @@ export default defineConfig(async () => ({
     format: 'es' as const,
   },
 
+  // Required so ONNX Runtime WASM files load correctly in dev and prod
+  optimizeDeps: {
+    exclude: ['@huggingface/transformers'],
+  },
+
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors
