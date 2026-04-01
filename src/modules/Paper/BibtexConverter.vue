@@ -92,7 +92,8 @@
               v-for="(line, i) in resultLines"
               :key="i"
               class="text-slate-800 text-sm leading-relaxed select-text whitespace-pre-wrap"
-            >{{ line }}</p>
+              v-html="line"
+            ></p>
           </div>
           <div v-else-if="inputText && entryCount === 0" class="flex items-center gap-2 text-amber-500 text-sm">
             <AlertCircle class="w-4 h-4 shrink-0" />
@@ -163,7 +164,8 @@ onUnmounted(() => {
 
 const copyToClipboard = () => {
   if (!resultText.value || copied.value) return;
-  navigator.clipboard.writeText(resultText.value);
+  const plainText = resultText.value.replace(/<[^>]+>/g, '');
+  navigator.clipboard.writeText(plainText);
   copied.value = true;
   setTimeout(() => (copied.value = false), 2000);
 };

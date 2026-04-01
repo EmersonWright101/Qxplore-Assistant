@@ -200,7 +200,7 @@ function formatIEEE(entry: BibtexEntry, index: number): string {
       const parts: string[] = [];
       if (authors) parts.push(authors);
       if (title) parts.push(title);
-      if (f.journal) parts.push(f.journal);
+      if (f.journal) parts.push(`<em>${f.journal}</em>`);
       const meta: string[] = [];
       if (f.volume) meta.push(`vol. ${f.volume}`);
       if (f.number) meta.push(`no. ${f.number}`);
@@ -214,7 +214,7 @@ function formatIEEE(entry: BibtexEntry, index: number): string {
       const parts: string[] = [];
       if (authors) parts.push(authors);
       if (title) parts.push(title);
-      const venue = f.booktitle ? `in Proc. ${f.booktitle}` : 'in Proc.';
+      const venue = f.booktitle ? `in Proc. <em>${f.booktitle}</em>` : 'in Proc.';
       const loc: string[] = [venue];
       if (f.address) loc.push(f.address);
       parts.push(loc.join(', '));
@@ -255,8 +255,8 @@ function formatAPA(entry: BibtexEntry): string {
     case 'article': {
       let ref = `${authors} ${year}. ${f.title || ''}.`;
       if (f.journal) {
-        ref += ` ${f.journal}`;
-        if (f.volume) ref += `, ${f.volume}`;
+        ref += ` <em>${f.journal}</em>`;
+        if (f.volume) ref += `, <em>${f.volume}</em>`;
         if (f.number) ref += `(${f.number})`;
         if (f.pages) ref += `, ${f.pages}`;
         ref += '.';
@@ -268,7 +268,7 @@ function formatAPA(entry: BibtexEntry): string {
     case 'conference': {
       let ref = `${authors} ${year}. ${f.title || ''}.`;
       if (f.booktitle) {
-        ref += ` In ${f.editors ? f.editors + ' (Ed.),' : ''} ${f.booktitle}`;
+        ref += ` In ${f.editors ? f.editors + ' (Ed.),' : ''} <em>${f.booktitle}</em>`;
         if (f.pages) ref += ` (pp. ${f.pages})`;
         ref += '.';
       }
@@ -276,7 +276,7 @@ function formatAPA(entry: BibtexEntry): string {
       return ref;
     }
     case 'book': {
-      let ref = `${authors} ${year}. ${f.title || ''}`;
+      let ref = `${authors} ${year}. <em>${f.title || ''}</em>`;
       if (f.edition) ref += ` (${f.edition} ed.)`;
       ref += '.';
       if (f.publisher) ref += ` ${f.publisher}.`;
