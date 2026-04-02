@@ -176,7 +176,7 @@
           <!-- Split view -->
           <div v-else class="grid grid-cols-2 divide-x divide-slate-200">
             <!-- Left column (old) -->
-            <div>
+            <div class="min-w-0 overflow-x-auto">
               <div
                 v-for="(row, idx) in splitRows"
                 :key="'l' + idx"
@@ -210,7 +210,7 @@
               </div>
             </div>
             <!-- Right column (new) -->
-            <div>
+            <div class="min-w-0 overflow-x-auto">
               <div
                 v-for="(row, idx) in splitRows"
                 :key="'r' + idx"
