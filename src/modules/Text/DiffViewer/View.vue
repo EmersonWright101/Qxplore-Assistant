@@ -23,7 +23,16 @@
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
             {{ t('diff.modified') }}
           </label>
-          <span v-if="newText" class="text-xs text-slate-400">{{ newLineCount }} {{ t('diff.lines') }}</span>
+          <div class="flex items-center gap-3">
+            <button
+              @click="router.push('/text/diff/history')"
+              class="text-xs text-slate-400 hover:text-sky-600 transition-colors px-2 py-1 rounded-md hover:bg-sky-50 flex items-center gap-1"
+            >
+              <History class="w-3.5 h-3.5" />
+              <span>{{ t('diff.history.btn') }}</span>
+            </button>
+            <span v-if="newText" class="text-xs text-slate-400">{{ newLineCount }} {{ t('diff.lines') }}</span>
+          </div>
         </div>
         <textarea
           ref="newTextareaRef"
@@ -55,15 +64,6 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- History button -->
-          <button
-            @click="router.push('/text/diff/history')"
-            class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-md border border-transparent text-slate-500 hover:text-sky-600 hover:bg-sky-50/80 hover:border-sky-100 transition-all duration-200"
-          >
-            <History class="w-3.5 h-3.5" />
-            {{ t('diff.history.btn') }}
-          </button>
-
           <!-- Copy diff button -->
           <button
             v-if="stats.added || stats.removed"

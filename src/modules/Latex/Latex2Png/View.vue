@@ -6,14 +6,23 @@
         <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
           {{ t('latex.source_code') }}
         </label>
-        <button 
-          v-if="inputLatex"
-          @click="inputLatex = ''"
-          class="text-xs text-slate-400 hover:text-red-500 transition-colors px-2 py-1 rounded-md hover:bg-red-50 flex items-center gap-1"
-        >
-          <XCircle class="w-3.5 h-3.5" />
-          <span>{{ t('common.clear') }}</span>
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            @click="router.push('/latex/history')"
+            class="text-xs text-slate-400 hover:text-purple-600 transition-colors px-2 py-1 rounded-md hover:bg-purple-50 flex items-center gap-1"
+          >
+            <History class="w-3.5 h-3.5" />
+            <span>{{ t('latex.history.btn') }}</span>
+          </button>
+          <button
+            v-if="inputLatex"
+            @click="inputLatex = ''"
+            class="text-xs text-slate-400 hover:text-red-500 transition-colors px-2 py-1 rounded-md hover:bg-red-50 flex items-center gap-1"
+          >
+            <XCircle class="w-3.5 h-3.5" />
+            <span>{{ t('common.clear') }}</span>
+          </button>
+        </div>
       </div>
       
       <div class="relative group">
@@ -106,18 +115,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import { Clipboard, Check, XCircle, Download } from 'lucide-vue-next'; 
+import { Clipboard, Check, XCircle, Download, History } from 'lucide-vue-next';
 import { toPng } from 'html-to-image';
 import { useI18n } from 'vue-i18n';
+import {
+  addHistoryRecord,
+  loadHistory,
+  pendingRestore,
+} from '../../../store/history/latex2png';
 
 // 状态定义
 const { t } = useI18n();
+const router = useRouter();
 
 const inputLatex = ref<string>('');
-const resolution = ref<number>(5); 
+const resolution = ref<number>(5);
+
+onMounted(async () => {
+  await loadHistory();
+  if (pendingRestore.value) {
+    inputLatex.value = pendingRestore.value.latex;
+    resolution.value = pendingRestore.value.resolution;
+    pendingRestore.value = null;
+  }
+});
 const copiedSource = ref(false);
 const previewRef = ref<HTMLElement | null>(null);
 
@@ -145,11 +170,12 @@ const previewHtml = computed(() => {
   }
 });
 
-const copySource = () => {
+const copySource = async () => {
   if (!inputLatex.value || copiedSource.value) return;
   navigator.clipboard.writeText(inputLatex.value);
   copiedSource.value = true;
   setTimeout(() => copiedSource.value = false, 2000);
+  await addHistoryRecord({ latex: inputLatex.value, resolution: resolution.value });
 };
 
 const downloadPng = async () => {
@@ -177,6 +203,8 @@ const downloadPng = async () => {
 
     downloadSuccess.value = true;
     setTimeout(() => downloadSuccess.value = false, 2000);
+
+    await addHistoryRecord({ latex: inputLatex.value, resolution: resolution.value });
 
   } catch (err) {
     console.error('Download Failed:', err);

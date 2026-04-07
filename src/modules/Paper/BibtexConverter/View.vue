@@ -7,14 +7,23 @@
         <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
           {{ t('bibtex.input_label') }}
         </label>
-        <button
-          v-if="inputText"
-          @click="inputText = ''"
-          class="text-xs text-slate-400 hover:text-red-500 transition-colors px-2 py-1 rounded-md hover:bg-red-50 flex items-center gap-1"
-        >
-          <XCircle class="w-3.5 h-3.5" />
-          <span>{{ t('common.clear') }}</span>
-        </button>
+        <div class="flex items-center gap-1">
+          <button
+            v-if="inputText"
+            @click="inputText = ''"
+            class="text-xs text-slate-400 hover:text-red-500 transition-colors px-2 py-1 rounded-md hover:bg-red-50 flex items-center gap-1"
+          >
+            <XCircle class="w-3.5 h-3.5" />
+            <span>{{ t('common.clear') }}</span>
+          </button>
+          <button
+            @click="router.push('/text/bibtex/history')"
+            class="flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
+          >
+            <History class="w-3.5 h-3.5" />
+            {{ t('bibtex.history.btn') }}
+          </button>
+        </div>
       </div>
 
       <div class="relative">
@@ -110,10 +119,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Clipboard, Check, XCircle, AlertCircle } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
+import { Clipboard, Check, XCircle, AlertCircle, History } from 'lucide-vue-next';
 import { formatBibtex, parseBibtex, type CitationFormat } from './bibtexConverter';
+import { addHistoryRecord, loadHistory, pendingRestore } from '../../../store/history/bibtexConverter';
 
 const { t } = useI18n();
+const router = useRouter();
 
 const inputText = ref('');
 const currentFormat = ref<CitationFormat>('ieee');
@@ -156,6 +168,14 @@ const switchFormat = (fmt: CitationFormat) => {
 onMounted(() => {
   setTimeout(() => nextTick(updateGlider), 100);
   window.addEventListener('resize', updateGlider);
+  loadHistory();
+  if (pendingRestore.value) {
+    const record = pendingRestore.value;
+    pendingRestore.value = null;
+    inputText.value = record.inputText;
+    currentFormat.value = record.format;
+    nextTick(updateGlider);
+  }
 });
 
 onUnmounted(() => {
@@ -168,6 +188,11 @@ const copyToClipboard = () => {
   navigator.clipboard.writeText(plainText);
   copied.value = true;
   setTimeout(() => (copied.value = false), 2000);
+  addHistoryRecord({
+    inputText: inputText.value,
+    outputText: resultText.value,
+    format: currentFormat.value,
+  });
 };
 </script>
 

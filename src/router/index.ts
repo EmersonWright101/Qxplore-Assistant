@@ -2,18 +2,20 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import HomeView from '../modules/Home/View.vue'
 import TextConverterView from '../modules/Text/CaseConverter/View.vue'
-import BibtexConverter from '../modules/Paper/BibtexConverter.vue'
-import ColorSchemeView from '../modules/Paper/ColorScheme.vue'
+import BibtexConverter from '../modules/Paper/BibtexConverter/View.vue'
+import BibtexConverterHistory from '../modules/Paper/BibtexConverter/History.vue'
+import ColorSchemeView from '../modules/Paper/ColorScheme/View.vue'
 import SettingsView from '../modules/Settings/View.vue'
-import Latex2Png from '../modules/Latex/latex2png.vue'
-import RemoveBg from '../modules/Media/RemoveBg.vue'
+import Latex2Png from '../modules/Latex/Latex2Png/View.vue'
+import Latex2PngHistory from '../modules/Latex/Latex2Png/History.vue'
+import RemoveBg from '../modules/Media/RemoveBg/View.vue'
+import RemoveBgHistory from '../modules/Media/RemoveBg/History.vue'
 import DiffViewer from '../modules/Text/DiffViewer/View.vue'
 import DiffViewerHistory from '../modules/Text/DiffViewer/History.vue'
 import TextStats from '../modules/Text/TextStats/View.vue'
 import TextConverterHistory from '../modules/Text/CaseConverter/History.vue'
 import TextStatsHistory from '../modules/Text/TextStats/History.vue'
-// 引入新增的打印机组件
-import PrinterView from '../modules/Misc/Printer.vue'
+import PrinterView from '../modules/Misc/Printer/View.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -34,6 +36,11 @@ const router = createRouter({
       component: BibtexConverter
     },
     {
+      path: '/text/bibtex/history',
+      name: 'BibtexConverterHistory',
+      component: BibtexConverterHistory
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: SettingsView
@@ -44,9 +51,19 @@ const router = createRouter({
       component: Latex2Png
     },
     {
+      path: '/latex/history',
+      name: 'Latex2PngHistory',
+      component: Latex2PngHistory
+    },
+    {
       path: '/media/remove-bg',
       name: 'RemoveBg',
       component: RemoveBg
+    },
+    {
+      path: '/media/remove-bg/history',
+      name: 'RemoveBgHistory',
+      component: RemoveBgHistory
     },
     {
       path: '/paper/color',

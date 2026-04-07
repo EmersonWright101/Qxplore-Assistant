@@ -77,15 +77,24 @@
           <div class="text-sm font-semibold text-slate-700 flex items-center gap-2">
             <ImageIcon class="w-4 h-4" /> {{ t('image.original') }}
           </div>
-          
-          <button 
-            v-if="originalUrl"
-            @click="clearAll"
-            class="flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-md transition-colors shadow-sm"
-          >
-            <Trash2 class="w-3.5 h-3.5" />
-            {{ t('common.clear') }}
-          </button>
+
+          <div class="flex items-center gap-2">
+            <button
+              @click="router.push('/media/remove-bg/history')"
+              class="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 rounded-md transition-all"
+            >
+              <History class="w-3.5 h-3.5" />
+              {{ t('image.history.btn') }}
+            </button>
+            <button
+              v-if="originalUrl"
+              @click="clearAll"
+              class="flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-md transition-colors shadow-sm"
+            >
+              <Trash2 class="w-3.5 h-3.5" />
+              {{ t('common.clear') }}
+            </button>
+          </div>
         </div>
         
         <div 
@@ -193,17 +202,20 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import { 
-  UploadCloud, Image as ImageIcon, Layers, Loader2, Download, 
-  Wand2, Trash2, Settings2, Check, X, Scaling, Timer, Cpu
+import { useRouter } from 'vue-router';
+import {
+  UploadCloud, Image as ImageIcon, Layers, Loader2, Download,
+  Wand2, Trash2, Settings2, Check, X, Scaling, Timer, Cpu, History
 } from 'lucide-vue-next';
 import type { Config } from '@imgly/background-removal';
 import { convertFileSrc } from '@tauri-apps/api/core';
-import { settings } from '../../store/settings';
-import BgWorker from '../../workers/bg-removal.worker.ts?worker';
+import { settings } from '../../../store/settings';
+import BgWorker from '../../../workers/bg-removal.worker.ts?worker';
 import { useI18n } from 'vue-i18n';
+import { addHistoryRecord, loadHistory, pendingRestore, readOriginalAsFile, readImageAsObjectUrl } from '../../../store/history/removeBg';
 
 const { t } = useI18n();
+const router = useRouter();
 
 const fileInput = ref<HTMLInputElement | null>(null);
 const timerRef = ref<HTMLElement | null>(null);
@@ -291,7 +303,24 @@ const handlePaste = (e: ClipboardEvent) => {
   }
 };
 
-onMounted(() => window.addEventListener('paste', handlePaste));
+onMounted(async () => {
+  window.addEventListener('paste', handlePaste);
+  loadHistory();
+
+  if (pendingRestore.value) {
+    const record = pendingRestore.value;
+    pendingRestore.value = null;
+    const file = await readOriginalAsFile(record);
+    if (file) handleFile(file);
+    const restoredUrl = await readImageAsObjectUrl(record.processedPath);
+    if (restoredUrl) {
+      processedUrl.value = restoredUrl;
+      selectedModel.value = record.model;
+      exportScale.value = record.exportScale;
+      processingTime.value = record.processingTime;
+    }
+  }
+});
 onUnmounted(() => window.removeEventListener('paste', handlePaste));
 
 const processImage = async () => {
@@ -348,6 +377,25 @@ const processImage = async () => {
       isProcessing.value = false;
       if (timerRef.value) processingTime.value = timerRef.value.innerText.trim();
       worker.terminate();
+
+      // Save to history immediately on successful processing
+      const snapModel = selectedModel.value;
+      const snapScale = exportScale.value;
+      const snapName = originalFile.value!.name;
+      const snapTime = processingTime.value;
+      ;(async () => {
+        try {
+          const originalData = new Uint8Array(await originalFile.value!.arrayBuffer());
+          const processedData = new Uint8Array(await blob.arrayBuffer());
+          await addHistoryRecord(
+            { originalName: snapName, model: snapModel, exportScale: snapScale, processingTime: snapTime },
+            originalData,
+            processedData,
+          );
+        } catch (e) {
+          console.error('removebg: failed to save history', e);
+        }
+      })();
     } else if (type === 'error') {
       console.error(error);
       // 🟢 修改：image.errors.process_failed
