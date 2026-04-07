@@ -73,7 +73,7 @@ jobs:
 
       - name: install frontend dependencies
         shell: bash
-        run: npm install
+        run: rm -rf node_modules package-lock.json && npm install
 
       - name: Debug Environment Variables
         shell: bash
