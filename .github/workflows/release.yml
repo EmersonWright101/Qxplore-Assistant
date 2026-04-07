@@ -73,7 +73,7 @@ jobs:
 
       - name: install frontend dependencies
         shell: bash
-        run: npm ci
+        run: npm install
 
       - name: Debug Environment Variables
         shell: bash
