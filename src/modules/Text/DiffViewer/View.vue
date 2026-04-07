@@ -55,6 +55,15 @@
         </div>
 
         <div class="flex items-center gap-2">
+          <!-- History button -->
+          <button
+            @click="router.push('/text/diff/history')"
+            class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-md border border-transparent text-slate-500 hover:text-sky-600 hover:bg-sky-50/80 hover:border-sky-100 transition-all duration-200"
+          >
+            <History class="w-3.5 h-3.5" />
+            {{ t('diff.history.btn') }}
+          </button>
+
           <!-- Copy diff button -->
           <button
             v-if="stats.added || stats.removed"
@@ -258,12 +267,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Plus, Minus, X, Check, Clipboard, CheckCircle } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
+import { Plus, Minus, X, Check, Clipboard, CheckCircle, History } from 'lucide-vue-next';
 import { computeDiff, toSplitRows, getDiffStats, diffToText } from './diffUtils';
+import { addHistoryRecord, loadHistory, pendingRestore } from '../../../store/history/diffViewer';
 
 const { t } = useI18n();
+const router = useRouter();
 
 const oldText = ref('');
 const newText = ref('');
@@ -313,7 +325,38 @@ let isSyncing = false;
 let oldObserver: ResizeObserver | null = null;
 let newObserver: ResizeObserver | null = null;
 
+// Auto-save after 10s of inactivity
+let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
+let lastSavedKey = '';
+
+watch([oldText, newText], ([oldVal, newVal]) => {
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  if (!oldVal.trim() && !newVal.trim()) return;
+  autoSaveTimer = setTimeout(() => {
+    const s = stats.value;
+    const key = `${oldVal}||${newVal}`;
+    if (key === lastSavedKey) return;
+    addHistoryRecord({
+      oldText: oldVal,
+      newText: newVal,
+      added: s.added,
+      removed: s.removed,
+      unchanged: s.unchanged,
+    });
+    lastSavedKey = key;
+  }, 10000);
+});
+
 onMounted(() => {
+  loadHistory();
+
+  if (pendingRestore.value) {
+    oldText.value = pendingRestore.value.oldText;
+    newText.value = pendingRestore.value.newText;
+    lastSavedKey = `${oldText.value}||${newText.value}`;
+    pendingRestore.value = null;
+  }
+
   setTimeout(() => nextTick(updateGlider), 100);
 
   oldObserver = new ResizeObserver(() => {
@@ -337,6 +380,7 @@ onMounted(() => {
 onUnmounted(() => {
   oldObserver?.disconnect();
   newObserver?.disconnect();
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
 });
 
 window.addEventListener('resize', updateGlider);

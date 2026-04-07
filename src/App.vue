@@ -268,7 +268,10 @@ const handleGroupClick = (id: string) => {
 const currentRouteName = computed(() => {
   switch (route.path) {
     case '/text': return t('sidebar.case_converter') || '大小写转换';
+    case '/text/history': return t('sidebar.case_converter') || '大小写转换';
+    case '/text/stats/history': return t('sidebar.text_stats') || '文本统计';
     case '/text/diff': return t('sidebar.diff_viewer') || '文本对比';
+    case '/text/diff/history': return t('sidebar.diff_viewer') || '文本对比';
     case '/text/stats': return t('sidebar.text_stats') || '文本统计';
     case '/text/bibtex': return t('sidebar.bibtex_converter') || 'BibTeX 转换';
     case '/paper/color': return t('sidebar.color_scheme') || '论文配色';

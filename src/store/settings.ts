@@ -17,6 +17,7 @@ interface SettingsState {
   modelPath: string;
   llmProviders: LLMProvider[];
   activeLlmProviderId: string;
+  historyMaxRecords: number;
 }
 
 const savedSettings = localStorage.getItem('app-settings');
@@ -27,6 +28,7 @@ const defaultSettings: SettingsState = {
   modelPath: '',
   llmProviders: [],
   activeLlmProviderId: '',
+  historyMaxRecords: 100,
 };
 
 let parsed: Record<string, unknown> = savedSettings ? JSON.parse(savedSettings) : {};

@@ -133,6 +133,8 @@ const messages = {
       general: {
         title: 'General',
         language: 'Language',
+        history_max_records: 'History Limit',
+        history_max_records_desc: 'Max records to keep per module',
       },
       ai: {
         title: "AI Configuration",
@@ -213,6 +215,23 @@ const messages = {
         UpperCamelCase: 'Upper Camel Case',
         lowerCamelCase: 'Lower Camel Case',
         uncapitalize: 'Uncapitalize',
+      },
+      history: {
+        btn: 'History',
+        title: 'Conversion History',
+        subtitle: '{count} records',
+        clear_all: 'Clear All',
+        confirm_clear: 'Are you sure you want to clear all history?',
+        confirm: 'Clear',
+        cancel: 'Cancel',
+        empty_title: 'No history yet',
+        empty_desc: 'Converted results will be saved here when you copy them.',
+        just_now: 'Just now',
+        minutes_ago: '{n}m ago',
+        hours_ago: '{n}h ago',
+        days_ago: '{n}d ago',
+        date_today: 'Today',
+        date_yesterday: 'Yesterday',
       }
     },
     // BibTeX 转换工具
@@ -369,6 +388,19 @@ const messages = {
       digits: 'Digits',
       lexical_density: 'Lexical Density',
       copy_stats: 'Copy Summary',
+      history: {
+        btn: 'History',
+        title: 'Statistics History',
+        subtitle: '{count} records',
+        clear_all: 'Clear All',
+        confirm_clear: 'Are you sure you want to clear all history?',
+        confirm: 'Clear',
+        cancel: 'Cancel',
+        empty_title: 'No history yet',
+        empty_desc: 'Copy stats summary to save a record.',
+        date_today: 'Today',
+        date_yesterday: 'Yesterday',
+      },
     },
     // 文本对比工具
     diff: {
@@ -388,6 +420,19 @@ const messages = {
       col_old: 'Old',
       col_new: 'New',
       col_content: 'Content',
+      history: {
+        btn: 'History',
+        title: 'Diff History',
+        subtitle: '{count} records',
+        clear_all: 'Clear All',
+        confirm_clear: 'Are you sure you want to clear all history?',
+        confirm: 'Clear',
+        cancel: 'Cancel',
+        empty_title: 'No history yet',
+        empty_desc: 'Diffs are auto-saved after 10s of inactivity.',
+        date_today: 'Today',
+        date_yesterday: 'Yesterday',
+      },
     },
     // 图片处理工具
     image: {
@@ -532,6 +577,8 @@ const messages = {
       general: {
         title: '通用',
         language: '语言 / Language',
+        history_max_records: '历史记录上限',
+        history_max_records_desc: '每个模块最多保留的记录条数',
       },
       ai: {
         title: "AI 配置",
@@ -612,6 +659,23 @@ const messages = {
         UpperCamelCase: '大驼峰',
         lowerCamelCase: '小驼峰',
         uncapitalize: '首字母小写',
+      },
+      history: {
+        btn: '历史记录',
+        title: '转换历史',
+        subtitle: '共 {count} 条记录',
+        clear_all: '清空全部',
+        confirm_clear: '确定要清空所有历史记录吗？',
+        confirm: '确定清空',
+        cancel: '取消',
+        empty_title: '暂无历史记录',
+        empty_desc: '复制转换结果后，记录会自动保存在这里。',
+        just_now: '刚刚',
+        minutes_ago: '{n} 分钟前',
+        hours_ago: '{n} 小时前',
+        days_ago: '{n} 天前',
+        date_today: '今天',
+        date_yesterday: '昨天',
       }
     },
     // BibTeX 转换工具
@@ -768,6 +832,19 @@ const messages = {
       digits: '数字',
       lexical_density: '词汇密度',
       copy_stats: '复制摘要',
+      history: {
+        btn: '历史记录',
+        title: '统计历史',
+        subtitle: '共 {count} 条记录',
+        clear_all: '清空全部',
+        confirm_clear: '确定要清空所有历史记录吗？',
+        confirm: '确定清空',
+        cancel: '取消',
+        empty_title: '暂无历史记录',
+        empty_desc: '复制统计摘要后，记录会自动保存在这里。',
+        date_today: '今天',
+        date_yesterday: '昨天',
+      },
     },
     // 文本对比工具
     diff: {
@@ -787,6 +864,19 @@ const messages = {
       col_old: '原始行',
       col_new: '新增行',
       col_content: '内容',
+      history: {
+        btn: '历史记录',
+        title: '对比历史',
+        subtitle: '共 {count} 条记录',
+        clear_all: '清空全部',
+        confirm_clear: '确定要清空所有历史记录吗？',
+        confirm: '确定清空',
+        cancel: '取消',
+        empty_title: '暂无历史记录',
+        empty_desc: '停止输入 10 秒后，对比内容将自动保存。',
+        date_today: '今天',
+        date_yesterday: '昨天',
+      },
     },
     // 图片处理工具
     image: {

@@ -385,7 +385,7 @@
 
       <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
 
-        <div class="p-4 flex items-center justify-between">
+        <div class="p-4 flex items-center justify-between border-b border-gray-100">
           <div class="flex items-center gap-3">
             <div class="p-2 bg-orange-50 text-orange-600 rounded-lg">
               <Globe class="w-5 h-5" />
@@ -400,6 +400,37 @@
             <option value="zh">中文 (简体)</option>
             <option value="en">English</option>
           </select>
+        </div>
+
+        <!-- History max records -->
+        <div class="p-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-teal-50 text-teal-600 rounded-lg">
+              <HistoryIcon class="w-5 h-5" />
+            </div>
+            <div class="flex flex-col">
+              <span class="font-medium text-slate-700">{{ t('settings.general.history_max_records') }}</span>
+              <span class="text-xs text-slate-400">{{ t('settings.general.history_max_records_desc') }}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button
+              @click="settings.historyMaxRecords = Math.max(10, (settings.historyMaxRecords ?? 100) - 10)"
+              class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-colors text-base font-medium"
+            >−</button>
+            <input
+              type="number"
+              v-model.number="settings.historyMaxRecords"
+              min="10"
+              max="2000"
+              class="w-16 text-center text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg py-1 outline-none focus:ring-1 focus:ring-teal-300 focus:border-teal-300"
+            />
+            <button
+              @click="settings.historyMaxRecords = Math.min(2000, (settings.historyMaxRecords ?? 100) + 10)"
+              class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-colors text-base font-medium"
+            >+</button>
+          </div>
         </div>
 
       </div>
@@ -514,7 +545,7 @@ import {
   Clock, Timer, Globe, HardDrive, X,
   RefreshCw, Download, Zap, CheckCircle2,
   KeyRound, BrainCircuit, Plus, Trash2, Building2,
-  Eye, EyeOff, Check
+  Eye, EyeOff, Check, History as HistoryIcon
 } from 'lucide-vue-next';
 import { open } from '@tauri-apps/plugin-dialog';
 

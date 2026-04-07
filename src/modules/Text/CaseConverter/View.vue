@@ -1,19 +1,28 @@
 <template>
   <div class="w-full max-w-6xl mx-auto space-y-8 pb-10 p-8">
-    
+
     <div class="space-y-3">
       <div class="flex items-center justify-between ml-1">
         <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
           {{ t('text.source') }}
         </label>
-        <button 
-          v-if="inputText"
-          @click="inputText = ''"
-          class="text-xs text-slate-400 hover:text-red-500 transition-colors px-2 py-1 rounded-md hover:bg-red-50 flex items-center gap-1"
-        >
-          <XCircle class="w-3.5 h-3.5" />
-          <span>{{ t('common.clear') }}</span>
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            @click="router.push('/text/history')"
+            class="text-xs text-slate-400 hover:text-blue-500 transition-colors px-2 py-1 rounded-md hover:bg-blue-50 flex items-center gap-1"
+          >
+            <History class="w-3.5 h-3.5" />
+            <span>{{ t('text.history.btn') }}</span>
+          </button>
+          <button
+            v-if="inputText"
+            @click="inputText = ''"
+            class="text-xs text-slate-400 hover:text-red-500 transition-colors px-2 py-1 rounded-md hover:bg-red-50 flex items-center gap-1"
+          >
+            <XCircle class="w-3.5 h-3.5" />
+            <span>{{ t('common.clear') }}</span>
+          </button>
+        </div>
       </div>
       
       <div class="relative group">
@@ -79,17 +88,18 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { convertText, type ConversionMode } from './converter';
-// 🟢 引入新图标
-import { Clipboard, Check, XCircle } from 'lucide-vue-next';
-
+import { Clipboard, Check, XCircle, History } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
+import { addHistoryRecord, loadHistory } from '../../../store/history/textConverter';
 
-// 状态定义
 const { t } = useI18n();
+const router = useRouter();
+const route = useRoute();
 
 const inputText = ref('');
-const currentMode = ref<ConversionMode>('camel'); // 确保这里的默认值 'camel' 对应下面的 modes 中的 value
+const currentMode = ref<ConversionMode>('camel');
 const copied = ref(false); // 控制复制成功的状态
 
 // 按钮引用数组和滑块样式
@@ -132,7 +142,19 @@ const switchMode = (mode: ConversionMode) => {
 };
 
 onMounted(() => {
-  // 给一点延迟确保字体加载完成，计算更准确
+  loadHistory();
+
+  // Restore from history query params (e.g., navigated from HistoryView)
+  if (route.query.input) {
+    inputText.value = String(route.query.input);
+  }
+  if (route.query.mode) {
+    const m = String(route.query.mode) as ConversionMode;
+    if (modes.value.some(mode => mode.value === m)) {
+      currentMode.value = m;
+    }
+  }
+
   setTimeout(() => {
     nextTick(updateGlider);
   }, 100);
@@ -140,12 +162,17 @@ onMounted(() => {
 
 window.addEventListener('resize', updateGlider);
 
-// 复制功能
+// 复制并保存历史
 const copyToClipboard = () => {
   if (!resultText.value || copied.value) return;
   navigator.clipboard.writeText(resultText.value);
-  
-  // 显示成功的绿色反馈
+
+  addHistoryRecord({
+    inputText: inputText.value,
+    outputText: resultText.value,
+    mode: currentMode.value,
+  });
+
   copied.value = true;
   setTimeout(() => copied.value = false, 2000);
 };

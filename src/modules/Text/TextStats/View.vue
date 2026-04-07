@@ -8,6 +8,13 @@
           {{ t('stats.source') }}
         </label>
         <div class="flex items-center gap-3">
+          <button
+            @click="router.push('/text/stats/history')"
+            class="text-xs text-slate-400 hover:text-emerald-600 transition-colors px-2 py-1 rounded-md hover:bg-emerald-50 flex items-center gap-1"
+          >
+            <History class="w-3.5 h-3.5" />
+            <span>{{ t('stats.history.btn') }}</span>
+          </button>
           <span v-if="text" class="text-xs text-slate-400 tabular-nums">
             {{ stats!.charCount.toLocaleString() }} {{ t('stats.chars_unit') }}
           </span>
@@ -169,18 +176,56 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import {
   XCircle, BarChart2, Hash, AlignLeft, Type, Clock,
   MessageSquare, AlignJustify, List, Globe, Minus,
-  Tag, Ruler, TrendingUp, Clipboard, Check
+  Tag, Ruler, TrendingUp, Clipboard, Check, History
 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
+import { addHistoryRecord, loadHistory } from '../../../store/history/textStats';
 
 const { t } = useI18n();
+const router = useRouter();
+const route = useRoute();
 
 const text = ref('');
 const copied = ref(false);
+
+// Auto-save after 10s of inactivity
+let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
+let lastSavedText = '';
+
+watch(text, (val) => {
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  if (!val.trim()) return;
+  autoSaveTimer = setTimeout(() => {
+    if (!stats.value || val === lastSavedText) return;
+    const s = stats.value;
+    addHistoryRecord({
+      inputText: val,
+      charCount: s.charCount,
+      wordCount: s.wordCount,
+      sentences: s.sentences,
+      paragraphs: s.paragraphs,
+      readingTimeStr: s.readingTimeStr,
+    });
+    lastSavedText = val;
+  }, 10000);
+});
+
+onUnmounted(() => {
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+});
+
+onMounted(() => {
+  loadHistory();
+  if (route.query.input) {
+    text.value = String(route.query.input);
+    lastSavedText = text.value;
+  }
+});
 
 const STOP_WORDS = new Set([
   'the','a','an','and','or','but','in','on','at','to','for','of','with','by',
