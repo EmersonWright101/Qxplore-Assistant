@@ -8,6 +8,8 @@ import ColorSchemeView from '../modules/Paper/ColorScheme/View.vue'
 import SettingsView from '../modules/Settings/View.vue'
 import Latex2Png from '../modules/Latex/Latex2Png/View.vue'
 import Latex2PngHistory from '../modules/Latex/Latex2Png/History.vue'
+import TableGenerator from '../modules/Latex/TableGenerator/View.vue'
+import TableGeneratorHistory from '../modules/Latex/TableGenerator/History.vue'
 import RemoveBg from '../modules/Media/RemoveBg/View.vue'
 import RemoveBgHistory from '../modules/Media/RemoveBg/History.vue'
 import DiffViewer from '../modules/Text/DiffViewer/View.vue'
@@ -54,6 +56,16 @@ const router = createRouter({
       path: '/latex/history',
       name: 'Latex2PngHistory',
       component: Latex2PngHistory
+    },
+    {
+      path: '/latex/table',
+      name: 'TableGenerator',
+      component: TableGenerator
+    },
+    {
+      path: '/latex/table/history',
+      name: 'TableGeneratorHistory',
+      component: TableGeneratorHistory
     },
     {
       path: '/media/remove-bg',

@@ -175,7 +175,7 @@ import { ref, computed, reactive, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import {
   Settings, PanelLeft, ChevronRight, FileText, FunctionSquare,
-  Command, Type, Sigma, Film, Eraser, Printer, Layers, BookMarked, GraduationCap, Palette, GitCompare, BarChart2
+  Command, Type, Sigma, Film, Eraser, Printer, Layers, BookMarked, GraduationCap, Palette, GitCompare, BarChart2, Table2
 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 // 🟢 引入全局 Store
@@ -220,7 +220,8 @@ const menuGroups = computed(() => [
     iconColor: 'text-emerald-600 group-hover:text-emerald-700',
     bgColor: 'bg-emerald-50 group-hover:bg-emerald-100/80',
     children: [
-      { path: '/latex', label: t('sidebar.latex2png') || 'LaTeX转图片', icon: Sigma }
+      { path: '/latex', label: t('sidebar.latex2png') || 'LaTeX转图片', icon: Sigma },
+      { path: '/latex/table', label: t('sidebar.table_generator') || '表格生成器', icon: Table2 },
     ]
   },
   {
@@ -278,6 +279,8 @@ const currentRouteName = computed(() => {
     case '/async': return t('sidebar.network_test') || '网络测试';
     case '/settings': return t('sidebar.settings') || '设置';
     case '/latex': return t('sidebar.latex2png') || 'LaTeX转图片';
+    case '/latex/table': return t('sidebar.table_generator') || '表格生成器';
+    case '/latex/table/history': return t('sidebar.table_generator') || '表格生成器';
     case '/media/remove-bg': return t('sidebar.remove_bg') || '移除背景';
     case '/misc/printer': return t('sidebar.printer') || '打印';
     default: return '';

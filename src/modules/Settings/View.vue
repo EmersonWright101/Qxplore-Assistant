@@ -2,12 +2,61 @@
   <div class="max-w-3xl mx-auto p-8 space-y-8">
     <h2 class="text-2xl font-bold text-slate-800">{{ t('settings.title') }}</h2>
 
-    <!-- Appearance -->
+    <!-- General -->
     <div class="space-y-3">
-      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{ t('settings.appearance.title') }}</h3>
+      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{ t('settings.general.title') }}</h3>
 
       <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
 
+        <div class="p-4 flex items-center justify-between border-b border-gray-100">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-orange-50 text-orange-600 rounded-lg">
+              <Globe class="w-5 h-5" />
+            </div>
+            <span class="font-medium text-slate-700">{{ t('settings.general.language') }}</span>
+          </div>
+
+          <select
+            v-model="settings.language"
+            class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none"
+          >
+            <option value="zh">中文 (简体)</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+
+        <!-- History max records -->
+        <div class="p-4 flex items-center justify-between border-b border-gray-100">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-teal-50 text-teal-600 rounded-lg">
+              <HistoryIcon class="w-5 h-5" />
+            </div>
+            <div class="flex flex-col">
+              <span class="font-medium text-slate-700">{{ t('settings.general.history_max_records') }}</span>
+              <span class="text-xs text-slate-400">{{ t('settings.general.history_max_records_desc') }}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button
+              @click="settings.historyMaxRecords = Math.max(10, (settings.historyMaxRecords ?? 100) - 10)"
+              class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-colors text-base font-medium"
+            >−</button>
+            <input
+              type="number"
+              v-model.number="settings.historyMaxRecords"
+              min="10"
+              max="2000"
+              class="w-16 text-center text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg py-1 outline-none focus:ring-1 focus:ring-teal-300 focus:border-teal-300"
+            />
+            <button
+              @click="settings.historyMaxRecords = Math.min(2000, (settings.historyMaxRecords ?? 100) + 10)"
+              class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-colors text-base font-medium"
+            >+</button>
+          </div>
+        </div>
+
+        <!-- Appearance rows merged into General -->
         <div class="p-4 flex items-center justify-between border-b border-gray-100">
           <div class="flex items-center gap-3">
             <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
@@ -52,55 +101,6 @@
               :class="settings.showSeconds ? 'translate-x-5' : 'translate-x-0'"
             ></div>
           </button>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- AI Model Path -->
-    <div class="space-y-3">
-      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{ t('settings.ai.title') }}</h3>
-
-      <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-
-        <div class="p-4 space-y-3">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                <HardDrive class="w-5 h-5" />
-              </div>
-              <div class="flex flex-col">
-                <span class="font-medium text-slate-700">{{ t('settings.ai.model_path') }}</span>
-                <span class="text-xs text-slate-400">{{ t('settings.ai.model_path_desc') }}</span>
-              </div>
-            </div>
-
-            <button
-              @click="selectModelFolder"
-              class="px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
-            >
-              {{ settings.modelPath ? t('settings.ai.change_folder') : t('settings.ai.select_folder') }}
-            </button>
-          </div>
-
-          <div class="relative group">
-            <div class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 font-mono break-all flex items-center justify-between gap-2">
-              <span v-if="settings.modelPath">{{ settings.modelPath }}</span>
-              <span v-else class="text-slate-400 italic">{{ t('settings.ai.not_configured') }}</span>
-
-              <button
-                v-if="settings.modelPath"
-                @click="settings.modelPath = ''"
-                class="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                :title="t('settings.ai.reset_default')"
-              >
-                <X class="w-3 h-3" />
-              </button>
-            </div>
-            <p v-if="settings.modelPath" class="mt-2 text-[10px] text-slate-400">
-              {{ t('settings.ai.path_hint') }} <code class="bg-slate-100 px-1 rounded">removebg/</code>
-            </p>
-          </div>
         </div>
 
       </div>
@@ -379,60 +379,273 @@
       </div>
     </div>
 
-    <!-- General -->
+    <!-- AI Model Path -->
     <div class="space-y-3">
-      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{ t('settings.general.title') }}</h3>
+      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{ t('settings.ai.title') }}</h3>
 
       <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
 
+        <div class="p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                <HardDrive class="w-5 h-5" />
+              </div>
+              <div class="flex flex-col">
+                <span class="font-medium text-slate-700">{{ t('settings.ai.model_path') }}</span>
+                <span class="text-xs text-slate-400">{{ t('settings.ai.model_path_desc') }}</span>
+              </div>
+            </div>
+
+            <button
+              @click="selectModelFolder"
+              class="px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+            >
+              {{ settings.modelPath ? t('settings.ai.change_folder') : t('settings.ai.select_folder') }}
+            </button>
+          </div>
+
+          <div class="relative group">
+            <div class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 font-mono break-all flex items-center justify-between gap-2">
+              <span v-if="settings.modelPath">{{ settings.modelPath }}</span>
+              <span v-else class="text-slate-400 italic">{{ t('settings.ai.not_configured') }}</span>
+
+              <button
+                v-if="settings.modelPath"
+                @click="settings.modelPath = ''"
+                class="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                :title="t('settings.ai.reset_default')"
+              >
+                <X class="w-3 h-3" />
+              </button>
+            </div>
+            <p v-if="settings.modelPath" class="mt-2 text-[10px] text-slate-400">
+              {{ t('settings.ai.path_hint') }} <code class="bg-slate-100 px-1 rounded">removebg/</code>
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Sync -->
+    <div class="space-y-3">
+      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{ t('settings.sync.title') }}</h3>
+
+      <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+
+        <!-- Enable toggle row -->
         <div class="p-4 flex items-center justify-between border-b border-gray-100">
           <div class="flex items-center gap-3">
-            <div class="p-2 bg-orange-50 text-orange-600 rounded-lg">
-              <Globe class="w-5 h-5" />
-            </div>
-            <span class="font-medium text-slate-700">{{ t('settings.general.language') }}</span>
-          </div>
-
-          <select
-            v-model="settings.language"
-            class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none"
-          >
-            <option value="zh">中文 (简体)</option>
-            <option value="en">English</option>
-          </select>
-        </div>
-
-        <!-- History max records -->
-        <div class="p-4 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="p-2 bg-teal-50 text-teal-600 rounded-lg">
-              <HistoryIcon class="w-5 h-5" />
+            <div class="p-2 bg-cyan-50 text-cyan-600 rounded-lg">
+              <Cloud class="w-5 h-5" />
             </div>
             <div class="flex flex-col">
-              <span class="font-medium text-slate-700">{{ t('settings.general.history_max_records') }}</span>
-              <span class="text-xs text-slate-400">{{ t('settings.general.history_max_records_desc') }}</span>
+              <span class="font-medium text-slate-700">{{ t('settings.sync.enable') }}</span>
+              <span class="text-xs text-slate-400">{{ t('settings.sync.enable_desc') }}</span>
+            </div>
+          </div>
+          <button
+            @click="syncConfig.enabled = !syncConfig.enabled"
+            class="w-12 h-7 rounded-full transition-colors duration-300 relative focus:outline-none"
+            :class="syncConfig.enabled ? 'bg-cyan-500' : 'bg-slate-200'"
+          >
+            <div
+              class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-300"
+              :class="syncConfig.enabled ? 'translate-x-5' : 'translate-x-0'"
+            ></div>
+          </button>
+        </div>
+
+        <!-- Config fields -->
+        <div class="divide-y divide-gray-100">
+
+          <!-- Server URL -->
+          <div class="p-4 space-y-2">
+            <div class="flex items-center gap-3">
+              <div class="p-2 bg-slate-100 text-slate-500 rounded-lg">
+                <Server class="w-4 h-4" />
+              </div>
+              <div class="flex flex-col">
+                <span class="font-medium text-slate-700 text-sm">{{ t('settings.sync.server_url') }}</span>
+                <span class="text-xs text-slate-400">{{ t('settings.sync.server_url_desc') }}</span>
+              </div>
+            </div>
+            <input
+              v-model="syncConfig.serverUrl"
+              type="text"
+              :placeholder="t('settings.sync.server_url_placeholder')"
+              class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-cyan-300 focus:border-cyan-300 font-mono"
+            />
+          </div>
+
+          <!-- Username + Password -->
+          <div class="p-4 grid grid-cols-2 gap-3">
+            <div class="space-y-1.5">
+              <label class="text-xs font-medium text-slate-500">{{ t('settings.sync.username') }}</label>
+              <input
+                v-model="syncConfig.username"
+                type="text"
+                :placeholder="t('settings.sync.username_placeholder')"
+                autocomplete="off"
+                class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-cyan-300 focus:border-cyan-300"
+              />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs font-medium text-slate-500">{{ t('settings.sync.password') }}</label>
+              <div class="relative">
+                <input
+                  v-model="syncConfig.password"
+                  :type="showSyncPassword ? 'text' : 'password'"
+                  :placeholder="t('settings.sync.password_placeholder')"
+                  autocomplete="new-password"
+                  class="w-full px-3 py-2 pr-9 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-cyan-300 focus:border-cyan-300 font-mono"
+                />
+                <button
+                  @click="showSyncPassword = !showSyncPassword"
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <Eye v-if="!showSyncPassword" class="w-4 h-4" />
+                  <EyeOff v-else class="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
 
-          <div class="flex items-center gap-1.5">
-            <button
-              @click="settings.historyMaxRecords = Math.max(10, (settings.historyMaxRecords ?? 100) - 10)"
-              class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-colors text-base font-medium"
-            >−</button>
-            <input
-              type="number"
-              v-model.number="settings.historyMaxRecords"
-              min="10"
-              max="2000"
-              class="w-16 text-center text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg py-1 outline-none focus:ring-1 focus:ring-teal-300 focus:border-teal-300"
-            />
-            <button
-              @click="settings.historyMaxRecords = Math.min(2000, (settings.historyMaxRecords ?? 100) + 10)"
-              class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-colors text-base font-medium"
-            >+</button>
+          <!-- Remote path + auto-sync interval -->
+          <div class="p-4 grid grid-cols-2 gap-3">
+            <div class="space-y-1.5">
+              <label class="text-xs font-medium text-slate-500">{{ t('settings.sync.remote_path') }}</label>
+              <input
+                v-model="syncConfig.remotePath"
+                type="text"
+                placeholder="QxploreAssistant"
+                class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-cyan-300 focus:border-cyan-300 font-mono"
+              />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs font-medium text-slate-500">{{ t('settings.sync.auto_sync') }}</label>
+              <select
+                v-model.number="syncConfig.autoSyncIntervalMinutes"
+                class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-cyan-300 focus:border-cyan-300"
+              >
+                <option :value="0">{{ t('settings.sync.auto_sync_off') }}</option>
+                <option :value="5">{{ t('settings.sync.auto_sync_5m') }}</option>
+                <option :value="15">{{ t('settings.sync.auto_sync_15m') }}</option>
+                <option :value="30">{{ t('settings.sync.auto_sync_30m') }}</option>
+                <option :value="60">{{ t('settings.sync.auto_sync_60m') }}</option>
+              </select>
+            </div>
           </div>
-        </div>
 
+          <!-- Action row: test + sync + status -->
+          <div class="p-4 flex items-center gap-3 flex-wrap">
+
+            <!-- Test connection -->
+            <button
+              @click="handleTestSyncConnection"
+              :disabled="syncTestState === 'testing'"
+              class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+              :class="syncTestState === 'testing' ? 'bg-slate-100 text-slate-500' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+            >
+              <RefreshCw class="w-3.5 h-3.5" :class="syncTestState === 'testing' ? 'animate-spin' : ''" />
+              {{ syncTestState === 'testing' ? t('settings.sync.testing') : t('settings.sync.test_connection') }}
+            </button>
+
+            <!-- Test result badge -->
+            <Transition name="fade" mode="out-in">
+              <span
+                v-if="syncTestState === 'ok'"
+                key="ok"
+                class="flex items-center gap-1 text-xs text-emerald-600 font-medium"
+              >
+                <Check class="w-3.5 h-3.5" />
+                {{ t('settings.sync.test_ok') }}
+                <span class="text-slate-400 font-normal">{{ syncTestMsg }}</span>
+              </span>
+              <span
+                v-else-if="syncTestState === 'fail'"
+                key="fail"
+                class="flex items-center gap-1 text-xs text-red-500 font-medium max-w-xs truncate"
+                :title="syncTestMsg"
+              >
+                <X class="w-3.5 h-3.5 shrink-0" />
+                {{ syncTestMsg }}
+              </span>
+            </Transition>
+
+            <div class="flex-1" />
+
+            <!-- Sync Now button -->
+            <button
+              @click="syncNow()"
+              :disabled="syncStatus.state === 'syncing' || !syncConfig.enabled"
+              class="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              :class="syncStatus.state === 'syncing'
+                ? 'bg-slate-100 text-slate-500'
+                : 'bg-cyan-500 hover:bg-cyan-600 text-white shadow-sm'"
+            >
+              <RefreshCw class="w-4 h-4" :class="syncStatus.state === 'syncing' ? 'animate-spin' : ''" />
+              {{ syncStatus.state === 'syncing'
+                  ? (syncStatus.progress.startsWith('Checking') || syncStatus.progress.startsWith('正在检查')
+                      ? t('settings.sync.checking')
+                      : t('settings.sync.syncing'))
+                  : t('settings.sync.sync_now') }}
+            </button>
+          </div>
+
+          <!-- Status bar -->
+          <div class="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center gap-2 text-xs">
+            <!-- Success -->
+            <template v-if="syncStatus.state === 'success'">
+              <CheckCircle2 class="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+              <span class="text-slate-500">
+                {{ t('settings.sync.last_sync') }}
+                <span class="font-medium text-slate-700">{{ formatSyncTime(syncStatus.lastSyncAt) }}</span>
+              </span>
+            </template>
+
+            <!-- Error -->
+            <template v-else-if="syncStatus.state === 'error'">
+              <AlertCircle class="w-3.5 h-3.5 text-red-500 shrink-0" />
+              <span class="text-red-600 truncate" :title="syncStatus.lastError ?? ''">{{ syncStatus.lastError }}</span>
+            </template>
+
+            <!-- In-progress -->
+            <template v-else-if="syncStatus.state === 'syncing'">
+              <RefreshCw class="w-3.5 h-3.5 text-cyan-500 animate-spin shrink-0" />
+              <span class="text-slate-500">{{ syncStatus.progress }}</span>
+            </template>
+
+            <!-- Up to date (no changes detected) -->
+            <template v-else-if="syncStatus.state === 'uptodate'">
+              <CheckCircle2 class="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+              <span class="text-slate-500">{{ t('settings.sync.up_to_date') }}</span>
+            </template>
+
+            <!-- Idle with last sync time -->
+            <template v-else-if="syncStatus.lastSyncAt">
+              <CheckCircle2 class="w-3.5 h-3.5 text-slate-300 shrink-0" />
+              <span class="text-slate-400">
+                {{ t('settings.sync.last_sync') }}
+                <span class="font-medium text-slate-500">{{ formatSyncTime(syncStatus.lastSyncAt) }}</span>
+              </span>
+            </template>
+
+            <!-- Never synced -->
+            <template v-else>
+              <Cloud class="w-3.5 h-3.5 text-slate-300 shrink-0" />
+              <span class="text-slate-400">{{ t('settings.sync.never_synced') }}</span>
+            </template>
+          </div>
+
+          <!-- Encryption note -->
+          <div class="px-4 py-2.5 flex items-start gap-2 text-xs text-slate-400">
+            <Lock class="w-3.5 h-3.5 mt-0.5 shrink-0 text-slate-300" />
+            <span>{{ t('settings.sync.encryption_note') }}</span>
+          </div>
+
+        </div>
       </div>
     </div>
 
@@ -545,12 +758,14 @@ import {
   Clock, Timer, Globe, HardDrive, X,
   RefreshCw, Download, Zap, CheckCircle2,
   KeyRound, BrainCircuit, Plus, Trash2, Building2,
-  Eye, EyeOff, Check, History as HistoryIcon
+  Eye, EyeOff, Check, History as HistoryIcon,
+  Cloud, Server, Lock, AlertCircle,
 } from 'lucide-vue-next';
 import { open } from '@tauri-apps/plugin-dialog';
 
 import { settings, type LLMProvider } from '../../store/settings';
 import { updateStore, checkForUpdates, startUpdate, initUpdateStore } from '../../store/updateStore';
+import { syncConfig, syncStatus, syncNow, testConnection as testSyncConnection } from '../../store/sync';
 
 const { t } = useI18n();
 
@@ -741,6 +956,38 @@ const selectModelFolder = async () => {
     console.error('无法打开文件夹选择器:', err);
   }
 };
+
+// --------------------------------------------------
+// Sync settings
+// --------------------------------------------------
+const showSyncPassword = ref(false);
+
+type SyncTestState = 'idle' | 'testing' | 'ok' | 'fail';
+const syncTestState = ref<SyncTestState>('idle');
+const syncTestMsg   = ref('');
+let syncTestResetTimer: ReturnType<typeof setTimeout> | null = null;
+
+const handleTestSyncConnection = async () => {
+  syncTestState.value = 'testing';
+  syncTestMsg.value   = '';
+  if (syncTestResetTimer) clearTimeout(syncTestResetTimer);
+  const result = await testSyncConnection();
+  syncTestState.value = result.ok ? 'ok' : 'fail';
+  syncTestMsg.value   = result.message;
+  syncTestResetTimer  = setTimeout(() => {
+    syncTestState.value = 'idle';
+    syncTestMsg.value   = '';
+  }, 6000);
+};
+
+function formatSyncTime(iso: string | null): string {
+  if (!iso) return t('settings.sync.never');
+  const d = new Date(iso);
+  return d.toLocaleString(settings.language === 'zh' ? 'zh-CN' : 'en-US', {
+    month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  });
+}
 
 // --------------------------------------------------
 // Init update store
