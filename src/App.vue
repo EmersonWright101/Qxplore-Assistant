@@ -67,11 +67,10 @@
                 class="flex items-center gap-1 px-3 py-2 rounded-md transition-all duration-200 group"
                 :class="[
                   isSidebarOpen ? 'ml-7' : 'justify-center',
-                  route.path === item.path 
-                    ? 'bg-blue-50 text-blue-700 shadow-sm font-medium' 
+                  route.path === item.path
+                    ? `${group.activeClass} shadow-sm font-medium`
                     : 'text-slate-500 hover:bg-slate-100'
                 ]"
-                active-class="bg-blue-50 text-blue-700 shadow-sm font-medium" 
               >
                 <component 
                   :is="item.icon" 
@@ -196,6 +195,7 @@ const menuGroups = computed(() => [
     icon: FileText,
     iconColor: 'text-blue-600 group-hover:text-blue-700',
     bgColor: 'bg-blue-50 group-hover:bg-blue-100/80',
+    activeClass: 'bg-blue-50 text-blue-700',
     children: [
       { path: '/text', label: t('sidebar.case_converter') || '大小写转换', icon: Type },
       { path: '/text/diff', label: t('sidebar.diff_viewer') || '文本对比', icon: GitCompare },
@@ -208,6 +208,7 @@ const menuGroups = computed(() => [
     icon: GraduationCap,
     iconColor: 'text-rose-600 group-hover:text-rose-700',
     bgColor: 'bg-rose-50 group-hover:bg-rose-100/80',
+    activeClass: 'bg-rose-50 text-rose-700',
     children: [
       { path: '/text/bibtex', label: t('sidebar.bibtex_converter') || 'BibTeX 转换', icon: BookMarked },
       { path: '/paper/color', label: t('sidebar.color_scheme') || '论文配色', icon: Palette },
@@ -219,6 +220,7 @@ const menuGroups = computed(() => [
     icon: FunctionSquare, 
     iconColor: 'text-emerald-600 group-hover:text-emerald-700',
     bgColor: 'bg-emerald-50 group-hover:bg-emerald-100/80',
+    activeClass: 'bg-emerald-50 text-emerald-700',
     children: [
       { path: '/latex', label: t('sidebar.latex2png') || 'LaTeX转图片', icon: Sigma },
       { path: '/latex/table', label: t('sidebar.table_generator') || '表格生成器', icon: Table2 },
@@ -230,6 +232,7 @@ const menuGroups = computed(() => [
     icon: Film,
     iconColor: 'text-purple-600 group-hover:text-purple-700',
     bgColor: 'bg-purple-50 group-hover:bg-purple-100/80',
+    activeClass: 'bg-purple-50 text-purple-700',
     children: [
       { path: '/media/remove-bg', label: t('sidebar.remove_bg') || '移除背景', icon: Eraser },
     ]
@@ -240,6 +243,7 @@ const menuGroups = computed(() => [
     icon: Layers,
     iconColor: 'text-orange-600 group-hover:text-orange-700',
     bgColor: 'bg-orange-50 group-hover:bg-orange-100/80',
+    activeClass: 'bg-orange-50 text-orange-700',
     children: [
       { path: '/misc/printer', label: t('sidebar.printer') || '打印', icon: Printer }
     ]
