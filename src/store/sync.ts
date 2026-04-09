@@ -35,13 +35,13 @@ import { encryptData, decryptData }    from '../utils/crypto';
 import { webdavGet, webdavPut, webdavMkcol, webdavPing } from '../utils/webdav';
 
 // History reactive refs (for reading local state + patching after merge)
-import { historyRecords as bibtexRecords }    from './history/bibtexConverter';
-import { historyRecords as diffRecords }      from './history/diffViewer';
-import { historyRecords as latex2pngRecords } from './history/latex2png';
-import { historyRecords as tableGenRecords }  from './history/tableGenerator';
-import { historyRecords as textConvRecords }  from './history/textConverter';
-import { historyRecords as textStatsRecords } from './history/textStats';
-import { historyRecords as removeBgRecords }  from './history/removeBg';
+import { historyRecords as bibtexRecords,    loadHistory as loadBibtex }    from './history/bibtexConverter';
+import { historyRecords as diffRecords,      loadHistory as loadDiff }       from './history/diffViewer';
+import { historyRecords as latex2pngRecords, loadHistory as loadLatex2png }  from './history/latex2png';
+import { historyRecords as tableGenRecords,  loadHistory as loadTableGen }   from './history/tableGenerator';
+import { historyRecords as textConvRecords,  loadHistory as loadTextConv }   from './history/textConverter';
+import { historyRecords as textStatsRecords, loadHistory as loadTextStats }  from './history/textStats';
+import { historyRecords as removeBgRecords,  loadHistory as loadRemoveBg }   from './history/removeBg';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -498,6 +498,14 @@ export async function syncNow(): Promise<void> {
   }
 
   try {
+    // Ensure all history modules are loaded from disk before syncing,
+    // so local data isn't missed if the user hasn't visited those pages yet.
+    syncStatus.progress = 'Loading local history…';
+    await Promise.all([
+      loadBibtex(), loadDiff(), loadLatex2png(), loadTableGen(),
+      loadTextConv(), loadTextStats(), loadRemoveBg(),
+    ]);
+
     syncStatus.progress = 'Preparing remote directory…';
     await ensureRemoteDir();
 
