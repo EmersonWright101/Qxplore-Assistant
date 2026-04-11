@@ -1,13 +1,13 @@
 <template>
   <div class="flex h-screen w-screen bg-white font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-700 overflow-hidden">
-    
-    <aside 
-      class="flex flex-col border-r border-gray-200 bg-slate-50/90 backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] overflow-hidden"
-      :class="isSidebarOpen ? 'w-64' : 'w-20'"
+
+    <aside
+      class="flex flex-col bg-slate-50/90 backdrop-blur-xl overflow-hidden flex-shrink-0"
+      :class="[isSidebarOpen ? '' : 'w-20', !isResizing && 'transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]']"
+      :style="isSidebarOpen ? { width: sidebarWidth + 'px' } : {}"
     >
-      <div 
+      <div
         class="px-4 py-4 mb-2 select-none draggable-region"
-        :class="isSidebarOpen ? 'min-w-[256px]' : 'min-w-0'"
       >
         <router-link 
           to="/" 
@@ -27,9 +27,8 @@
         </router-link>
       </div>
 
-      <nav 
+      <nav
         class="flex-1 px-3 space-y-1 overflow-y-auto pt-2"
-        :class="isSidebarOpen ? 'min-w-[256px]' : 'min-w-0'"
       >
         
         <div v-for="group in menuGroups" :key="group.id" class="space-y-1 mb-3">
@@ -88,9 +87,8 @@
 
       </nav>
 
-      <div 
+      <div
         class="p-3 mt-auto border-t border-gray-200/50"
-        :class="isSidebarOpen ? 'min-w-[256px]' : 'min-w-0'"
       >
         <router-link 
           to="/settings" 
@@ -135,7 +133,19 @@
 
     </aside>
 
-    <main class="flex-1 flex flex-col min-w-0 bg-white relative transition-all duration-300">
+    <!-- Resize handle -->
+    <div
+      class="relative flex-shrink-0 w-1 group cursor-col-resize select-none z-40"
+      @pointerdown.prevent="startResize"
+    >
+      <div
+        class="absolute inset-y-0 left-0 w-px transition-colors duration-150"
+        :class="isResizing ? 'bg-blue-400' : 'bg-gray-200 group-hover:bg-blue-400'"
+      ></div>
+      <div class="absolute inset-y-0 -left-1 -right-1"></div>
+    </div>
+
+    <main class="flex-1 flex flex-col min-w-0 bg-white relative">
       <header 
         class="h-12 flex items-center px-4 z-50 transition-all duration-300"
         :class="route.path === '/' 
@@ -170,11 +180,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted } from 'vue';
+import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import {
   Settings, PanelLeft, ChevronRight, FileText, FunctionSquare,
-  Command, Type, Sigma, Film, Eraser, Printer, Layers, BookMarked, GraduationCap, Palette, GitCompare, BarChart2, Table2
+  Command, Type, Sigma, Film, Eraser, Printer, Layers, BookMarked, GraduationCap, Palette, GitCompare, BarChart2, Table2, ArrowLeftRight
 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 // 🟢 引入全局 Store
@@ -183,6 +193,41 @@ import { updateStore, checkForUpdates, initUpdateStore } from './store/updateSto
 const { t } = useI18n();
 const route = useRoute();
 const isSidebarOpen = ref(true);
+const sidebarWidth = ref(parseInt(localStorage.getItem('sidebar-width') || '256'));
+const isResizing = ref(false);
+
+let resizeStartX = 0;
+let resizeStartWidth = 0;
+
+function startResize(e: PointerEvent) {
+  if (!isSidebarOpen.value) return;
+  isResizing.value = true;
+  resizeStartX = e.clientX;
+  resizeStartWidth = sidebarWidth.value;
+  (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  document.addEventListener('pointermove', onResize);
+  document.addEventListener('pointerup', stopResize, { once: true });
+  document.body.style.userSelect = 'none';
+  document.body.style.cursor = 'col-resize';
+}
+
+function onResize(e: PointerEvent) {
+  const newWidth = Math.max(180, Math.min(480, resizeStartWidth + e.clientX - resizeStartX));
+  sidebarWidth.value = newWidth;
+}
+
+function stopResize() {
+  isResizing.value = false;
+  document.removeEventListener('pointermove', onResize);
+  document.body.style.userSelect = '';
+  document.body.style.cursor = '';
+  localStorage.setItem('sidebar-width', String(sidebarWidth.value));
+}
+
+onUnmounted(() => {
+  document.removeEventListener('pointermove', onResize);
+  document.removeEventListener('pointerup', stopResize);
+});
 
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value;
@@ -211,6 +256,7 @@ const menuGroups = computed(() => [
     activeClass: 'bg-rose-50 text-rose-700',
     children: [
       { path: '/text/bibtex', label: t('sidebar.bibtex_converter') || 'BibTeX 转换', icon: BookMarked },
+      { path: '/paper/format-converter', label: t('sidebar.format_converter') || '格式转换', icon: ArrowLeftRight },
       { path: '/paper/color', label: t('sidebar.color_scheme') || '论文配色', icon: Palette },
     ]
   },
@@ -279,6 +325,8 @@ const currentRouteName = computed(() => {
     case '/text/diff/history': return t('sidebar.diff_viewer') || '文本对比';
     case '/text/stats': return t('sidebar.text_stats') || '文本统计';
     case '/text/bibtex': return t('sidebar.bibtex_converter') || 'BibTeX 转换';
+    case '/paper/format-converter': return t('sidebar.format_converter') || '格式转换';
+    case '/paper/format-converter/history': return t('sidebar.format_converter') || '格式转换';
     case '/paper/color': return t('sidebar.color_scheme') || '论文配色';
     case '/async': return t('sidebar.network_test') || '网络测试';
     case '/settings': return t('sidebar.settings') || '设置';

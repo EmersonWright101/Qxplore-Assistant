@@ -114,25 +114,65 @@
         <p class="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">
           {{ t('home.quick_launch') }}
         </p>
-        <div class="grid grid-cols-4 gap-3">
-          <router-link
-            v-for="f in features"
+        <transition-group tag="div" name="card-reorder" class="grid grid-cols-4 gap-3">
+          <div
+            v-for="f in displayedFeatures"
             :key="f.path"
-            :to="f.path"
-            class="group flex flex-col gap-3 p-5 rounded-2xl bg-white/60 backdrop-blur-sm border border-white/80 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200"
+            :data-feature-path="f.path"
+            :class="[
+              'group relative flex flex-col gap-3 p-5 rounded-2xl bg-white/60 backdrop-blur-sm border border-white/80 shadow-sm',
+              dragPath === f.path ? 'opacity-0 pointer-events-none' : 'hover:shadow-md cursor-grab',
+            ]"
+            style="touch-action: none; user-select: none;"
+            @pointerdown="onCardPointerDown(f, $event)"
           >
-            <div :class="`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0 ${f.color}`">
-              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path :d="f.icon" />
+            <!-- drag handle dots -->
+            <div class="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-25 transition-opacity duration-150 pointer-events-none">
+              <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+                <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
               </svg>
             </div>
-            <div class="flex flex-col gap-1 min-h-0">
-              <div class="text-sm font-semibold text-slate-700 group-hover:text-slate-900 leading-tight">{{ t(f.name) }}</div>
-              <div class="text-xs text-slate-400 leading-relaxed">{{ t(f.desc) }}</div>
-            </div>
-          </router-link>
-        </div>
+            <router-link :to="f.path" class="flex flex-col gap-3 flex-1" @click.capture="onCardClick">
+              <div :class="`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0 ${f.color}`">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path :d="f.icon" />
+                </svg>
+              </div>
+              <div class="flex flex-col gap-1 min-h-0">
+                <div class="text-sm font-semibold text-slate-700 group-hover:text-slate-900 leading-tight">{{ t(f.name) }}</div>
+                <div class="text-xs text-slate-400 leading-relaxed">{{ t(f.desc) }}</div>
+              </div>
+            </router-link>
+          </div>
+        </transition-group>
       </div>
+
+      <!-- ── Floating ghost card ── -->
+      <Teleport to="body">
+        <div
+          v-if="dragPath && ghostFeature"
+          class="fixed pointer-events-none z-[9999] flex flex-col gap-3 p-5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 shadow-2xl"
+          :style="{
+            left:      ghostLeft + 'px',
+            top:       ghostTop  + 'px',
+            width:     ghostW    + 'px',
+            height:    ghostH    + 'px',
+            transform: 'rotate(2deg) scale(1.05)',
+          }"
+        >
+          <div :class="`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0 ${ghostFeature.color}`">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path :d="ghostFeature.icon" />
+            </svg>
+          </div>
+          <div class="flex flex-col gap-1 min-h-0">
+            <div class="text-sm font-semibold text-slate-700 leading-tight">{{ t(ghostFeature.name) }}</div>
+            <div class="text-xs text-slate-400 leading-relaxed">{{ t(ghostFeature.desc) }}</div>
+          </div>
+        </div>
+      </Teleport>
 
     </div>
   </div>
@@ -144,6 +184,121 @@ import { useI18n } from 'vue-i18n';
 import { settings } from '../../store/settings';
 
 const { t } = useI18n();
+
+// ── Drag-to-reorder (pointer events) ──────────────────────────────────────────
+const dragPath  = ref<string | null>(null);   // path of card being dragged (invisible in grid)
+const hoverPath = ref<string | null>(null);   // path of slot currently hovered
+const ghostLeft = ref(0);
+const ghostTop  = ref(0);
+const ghostW    = ref(0);
+const ghostH    = ref(0);
+
+let dragOffsetX    = 0;
+let dragOffsetY    = 0;
+let dragStartX     = 0;
+let dragStartY     = 0;
+let dragStarted    = false;
+let pendingFeature: Feature | null = null;
+let pendingEl: HTMLElement | null  = null;
+let suppressClick  = false;
+
+const ghostFeature = computed(() =>
+  features.value.find(f => f.path === dragPath.value) ?? null
+);
+
+// Real-time computed order: reinsert dragged card at hovered slot position
+const displayedFeatures = computed<Feature[]>(() => {
+  if (!dragPath.value || !hoverPath.value || dragPath.value === hoverPath.value) {
+    return features.value;
+  }
+  const arr     = [...features.value];
+  const fromIdx = arr.findIndex(f => f.path === dragPath.value);
+  const toIdx   = arr.findIndex(f => f.path === hoverPath.value);
+  if (fromIdx === -1 || toIdx === -1) return arr;
+  const [item] = arr.splice(fromIdx, 1);
+  arr.splice(toIdx, 0, item);
+  return arr;
+});
+
+function onCardPointerDown(feature: Feature, e: PointerEvent) {
+  if (e.button !== 0) return;
+  pendingFeature = feature;
+  pendingEl      = e.currentTarget as HTMLElement;
+  dragStartX     = e.clientX;
+  dragStartY     = e.clientY;
+  dragStarted    = false;
+  document.addEventListener('pointermove',   onDocPointerMove, { passive: false });
+  document.addEventListener('pointerup',     onDocPointerUp);
+  document.addEventListener('pointercancel', onDocPointerUp);
+}
+
+function onDocPointerMove(e: PointerEvent) {
+  if (!dragStarted) {
+    const dx = e.clientX - dragStartX;
+    const dy = e.clientY - dragStartY;
+    if (dx * dx + dy * dy < 36) return; // 6 px threshold before drag starts
+    dragStarted = true;
+    const rect    = pendingEl!.getBoundingClientRect();
+    dragOffsetX   = dragStartX - rect.left;
+    dragOffsetY   = dragStartY - rect.top;
+    ghostW.value  = rect.width;
+    ghostH.value  = rect.height;
+    ghostLeft.value = rect.left;
+    ghostTop.value  = rect.top;
+    dragPath.value  = pendingFeature!.path;
+    hoverPath.value = pendingFeature!.path;
+  }
+  if (!dragPath.value) return;
+  e.preventDefault();
+  ghostLeft.value = e.clientX - dragOffsetX;
+  ghostTop.value  = e.clientY - dragOffsetY;
+
+  // Find which card the cursor is over (ghost is pointer-events-none so it's transparent)
+  const els = document.elementsFromPoint(e.clientX, e.clientY);
+  for (const el of els) {
+    let node: Element | null = el;
+    while (node) {
+      const path = (node as HTMLElement).dataset?.featurePath;
+      if (path && path !== dragPath.value) { hoverPath.value = path; return; }
+      node = node.parentElement;
+    }
+  }
+}
+
+function onDocPointerUp() {
+  if (dragStarted && dragPath.value) {
+    features.value = displayedFeatures.value;
+    saveFeatureOrder();
+    suppressClick = true;
+    requestAnimationFrame(() => { suppressClick = false; });
+  }
+  dragPath.value  = null;
+  hoverPath.value = null;
+  dragStarted     = false;
+  pendingFeature  = null;
+  pendingEl       = null;
+  document.removeEventListener('pointermove',   onDocPointerMove);
+  document.removeEventListener('pointerup',     onDocPointerUp);
+  document.removeEventListener('pointercancel', onDocPointerUp);
+}
+
+function onCardClick(e: MouseEvent) {
+  if (suppressClick) { e.preventDefault(); e.stopPropagation(); }
+}
+
+// ── Persistence ────────────────────────────────────────────────────────────────
+function saveFeatureOrder() {
+  settings.homeCardOrder = features.value.map((f: Feature) => f.path);
+}
+
+function loadFeatureOrder(): Feature[] {
+  const saved = settings.homeCardOrder;
+  if (!Array.isArray(saved) || saved.length === 0) return ALL_FEATURES;
+  const map     = Object.fromEntries(ALL_FEATURES.map((f: Feature) => [f.path, f]));
+  const ordered = saved.map((p: string) => map[p]).filter(Boolean) as Feature[];
+  const rest    = ALL_FEATURES.filter((f: Feature) => !saved.includes(f.path));
+  return [...ordered, ...rest];
+}
 
 // ── Refs ───────────────────────────────────────────────────────────────────────
 const timeString        = ref('');
@@ -170,7 +325,9 @@ let timer: ReturnType<typeof setInterval> | null = null;
 const translatedGreeting = computed(() => t(greetingKey.value));
 
 // ── Features ───────────────────────────────────────────────────────────────────
-const features = [
+type Feature = { path: string; name: string; desc: string; color: string; icon: string };
+
+const ALL_FEATURES: Feature[] = [
   { path: '/text',            name: 'sidebar.text_manipulation', desc: 'home.features.text.desc',      color: 'bg-blue-500',   icon: 'M4 6h16M4 10h12M4 14h8M4 18h6' },
   { path: '/text/bibtex',     name: 'sidebar.bibtex_converter',  desc: 'home.features.bibtex.desc',    color: 'bg-indigo-500', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
   { path: '/text/diff',       name: 'sidebar.diff_viewer',       desc: 'home.features.diff.desc',      color: 'bg-cyan-500',   icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4' },
@@ -179,8 +336,11 @@ const features = [
   { path: '/latex',           name: 'sidebar.latex2png',         desc: 'home.features.latex.desc',     color: 'bg-purple-500',  icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
   { path: '/latex/table',     name: 'sidebar.table_generator',   desc: 'home.features.table.desc',     color: 'bg-emerald-500', icon: 'M3 10h18M3 14h18M10 3v18M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z' },
   { path: '/media/remove-bg', name: 'sidebar.remove_bg',         desc: 'home.features.remove_bg.desc', color: 'bg-pink-500',    icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
-  { path: '/misc/printer',    name: 'sidebar.printer',           desc: 'home.features.printer.desc',   color: 'bg-orange-500', icon: 'M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z' },
+  { path: '/misc/printer',             name: 'sidebar.printer',           desc: 'home.features.printer.desc',          color: 'bg-orange-500', icon: 'M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z' },
+  { path: '/paper/format-converter',   name: 'sidebar.format_converter',  desc: 'home.features.format_converter.desc', color: 'bg-rose-500',   icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4' },
 ];
+
+const features = ref<Feature[]>(ALL_FEATURES);
 
 // ── Five-element badge colors (天干 index 0-9 → element) ──────────────────────
 // 甲乙=木(green), 丙丁=火(amber), 戊己=土(yellow), 庚辛=金(slate), 壬癸=水(blue)
@@ -316,11 +476,21 @@ const updateTime = () => {
   yearDaysLeft.value = totalDays - passedDays;
 };
 
-onMounted(() => { updateTime(); timer = setInterval(updateTime, 1000); });
-onUnmounted(() => { if (timer) clearInterval(timer); });
+onMounted(() => { features.value = loadFeatureOrder(); updateTime(); timer = setInterval(updateTime, 1000); });
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
+  document.removeEventListener('pointermove',   onDocPointerMove);
+  document.removeEventListener('pointerup',     onDocPointerUp);
+  document.removeEventListener('pointercancel', onDocPointerUp);
+});
 </script>
 
 <style scoped>
+/* Smooth FLIP animation when cards reorder */
+.card-reorder-move {
+  transition: transform 220ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
 @keyframes blob {
   0%   { transform: translate(0, 0) scale(1); }
   33%  { transform: translate(30px, -50px) scale(1.1); }

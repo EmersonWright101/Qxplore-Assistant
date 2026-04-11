@@ -164,6 +164,46 @@ export async function readImageAsObjectUrl(relativePath: string): Promise<string
 }
 
 /**
+ * Read a history image file from disk as raw bytes.
+ * Returns null if the file is missing.
+ * Used by the sync engine to upload images to remote storage.
+ */
+export async function readImageBytes(relativePath: string): Promise<Uint8Array | null> {
+  try {
+    const base = await getHistoryDir();
+    return await readFile(`${base}/${relativePath}`);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Write raw image bytes to a history image path.
+ * Creates subdirectories as needed.
+ * Used by the sync engine to save downloaded images locally.
+ */
+export async function writeImageBytes(relativePath: string, data: Uint8Array): Promise<void> {
+  await ensureDirs();
+  const base = await getHistoryDir();
+  await writeFile(`${base}/${relativePath}`, data);
+}
+
+/**
+ * Persist a set of records to disk without modifying the reactive ref.
+ * Called by the sync engine after a union merge so that sync-triggered
+ * writes don't race with the reactive state update.
+ */
+export async function persistHistoryToDisk(records: RemoveBgRecord[]): Promise<void> {
+  try {
+    await ensureDirs();
+    const payload: HistoryFile = { version: 1, records };
+    await writeTextFile(await getIndexPath(), JSON.stringify(payload, null, 2));
+  } catch (e) {
+    console.error('removebg: failed to persist history to disk', e);
+  }
+}
+
+/**
  * Read a history original image and return it as a File object,
  * suitable for restoring into the main RemoveBg view.
  * Returns null if the file is missing.

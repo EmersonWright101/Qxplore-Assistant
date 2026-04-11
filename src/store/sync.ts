@@ -15,6 +15,9 @@
  *             the payload.  Device-specific fields (modelPath) are never synced.
  * History   : union merge by record ID → sort by timestamp DESC → trim to
  *             historyMaxRecords.  New records on either side are preserved.
+ * Binary assets : upload local files missing from remote; download remote files
+ *             missing locally.  Files present on both sides are left as-is
+ *             (no overwrite) to minimise bandwidth.
  *
  * ── Bandwidth optimisation ───────────────────────────────────────────────────
  * Auto-sync uses a two-step check before doing a full sync:
@@ -22,9 +25,13 @@
  *   2. Remote manifest   – a tiny encrypted file (manifest.enc) that records
  *      the timestamp of the last successful sync.  Fetching it costs only 1 GET.
  * If neither the local state is dirty nor the remote manifest has changed since
- * the last sync, the auto-sync cycle is skipped entirely.  This means a quiet
- * device at the default 15-minute interval only makes 1 GET per cycle instead
- * of 9+ requests, dramatically reducing API call volume.
+ * the last sync, the auto-sync cycle is skipped entirely.
+ *
+ * ── Adding a new module ───────────────────────────────────────────────────────
+ * 1. Create your history store under store/history/ following the same pattern.
+ * 2. Add one entry to HISTORY_MODULES below (import the ref, load fn, etc.).
+ *    For modules with binary assets (images, etc.) also supply assetDir +
+ *    getAssets.  No other changes to this file are needed.
  */
 
 import { reactive, watch } from 'vue';
@@ -32,16 +39,24 @@ import { appLocalDataDir } from '@tauri-apps/api/path';
 import { writeTextFile, exists, mkdir } from '@tauri-apps/plugin-fs';
 import { settings }                    from './settings';
 import { encryptData, decryptData }    from '../utils/crypto';
-import { webdavGet, webdavPut, webdavMkcol, webdavPing } from '../utils/webdav';
+import { webdavGet, webdavPut, webdavMkcol, webdavExists, webdavPing } from '../utils/webdav';
 
-// History reactive refs (for reading local state + patching after merge)
+// History reactive refs + loaders
 import { historyRecords as bibtexRecords,    loadHistory as loadBibtex }    from './history/bibtexConverter';
 import { historyRecords as diffRecords,      loadHistory as loadDiff }       from './history/diffViewer';
 import { historyRecords as latex2pngRecords, loadHistory as loadLatex2png }  from './history/latex2png';
 import { historyRecords as tableGenRecords,  loadHistory as loadTableGen }   from './history/tableGenerator';
 import { historyRecords as textConvRecords,  loadHistory as loadTextConv }   from './history/textConverter';
-import { historyRecords as textStatsRecords, loadHistory as loadTextStats }  from './history/textStats';
-import { historyRecords as removeBgRecords,  loadHistory as loadRemoveBg }   from './history/removeBg';
+import { historyRecords as textStatsRecords,  loadHistory as loadTextStats }  from './history/textStats';
+import { historyRecords as latexConvRecords,  loadHistory as loadLatexConv }  from './history/latexConverter';
+import {
+  historyRecords as removeBgRecords,
+  loadHistory    as loadRemoveBg,
+  readImageBytes,
+  writeImageBytes,
+  persistHistoryToDisk as persistRemoveBgToDisk,
+  type RemoveBgRecord,
+} from './history/removeBg';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -111,14 +126,12 @@ export const syncStatus = reactive<SyncStatus>({
 
 /**
  * True while a sync cycle is running.  Prevents sync-triggered ref mutations
- * (e.g. writing merged records back to a history store) from falsely marking
- * the local state as dirty again immediately after a successful sync.
+ * from falsely marking the local state as dirty again after a successful sync.
  */
 let _syncInProgress = false;
 
 /**
- * Epoch-ms timestamp of the most recent local change, or 0 if the local state
- * is clean (unchanged since the last successful sync).
+ * Epoch-ms timestamp of the most recent local change, or 0 if clean.
  */
 let _localDirtyAt = 0;
 
@@ -135,27 +148,12 @@ watch(
   },
 );
 
-// Track history changes across all modules
-watch(bibtexRecords,    markDirty, { deep: true });
-watch(diffRecords,      markDirty, { deep: true });
-watch(latex2pngRecords, markDirty, { deep: true });
-watch(tableGenRecords,  markDirty, { deep: true });
-watch(textConvRecords,  markDirty, { deep: true });
-watch(textStatsRecords, markDirty, { deep: true });
-watch(removeBgRecords,  markDirty, { deep: true });
-
 // ─── Remote manifest (lightweight change detection) ───────────────────────────
 
-/**
- * Tiny file uploaded to remote after every successful sync.
- * Reading it (1 GET) lets us detect whether another device has synced more
- * recently than us, without downloading all 8 history/settings files.
- */
 interface SyncManifest { syncedAt: string }
 
 const MANIFEST_LS_KEY = 'webdav-manifest-synced-at';
 
-/** Timestamp from the manifest we wrote (or read) on the last successful sync. */
 let _lastKnownRemoteSyncedAt: string | null = localStorage.getItem(MANIFEST_LS_KEY);
 
 async function fetchRemoteManifest(): Promise<SyncManifest | null> {
@@ -196,22 +194,241 @@ function remotePath(filename: string): string {
   return `/${base}/${filename}`;
 }
 
-/** Ensure the remote directory exists (creates it if missing). */
+/** Ensure the top-level remote directory exists. */
 async function ensureRemoteDir(): Promise<void> {
   const base = syncConfig.remotePath.replace(/^\/+|\/+$/g, '');
   await webdavMkcol(dav(), `/${base}/`);
 }
 
+// ─── Binary helpers ───────────────────────────────────────────────────────────
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+function base64ToBytes(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes  = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+// ─── Module registry types ────────────────────────────────────────────────────
+
+interface BaseRecord {
+  id:        string;
+  timestamp: string;
+  [key: string]: unknown;
+}
+
+/**
+ * A binary asset that lives alongside a history record (e.g. an image file).
+ */
+interface BinaryAsset {
+  /** Path relative to the remote asset directory, e.g. "originals/abc123.jpg" */
+  path: string;
+  /** Read the local bytes.  Returns null when the file is missing locally. */
+  readLocal:  () => Promise<Uint8Array | null>;
+  /** Write received bytes to the local path (creates dirs as needed). */
+  writeLocal: (data: Uint8Array) => Promise<void>;
+}
+
+/**
+ * Descriptor for a single history module.  Add one entry to HISTORY_MODULES
+ * to register a new module — no other sync code changes required.
+ */
+interface HistoryModuleDescriptor {
+  /** Remote filename for the encrypted JSON metadata, e.g. "h_bibtex.enc" */
+  remoteFile: string;
+  /** Human-readable label for progress messages */
+  label: string;
+  /** Reactive ref pointing to the module's record array */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ref: { value: any[] };
+  /** Load records from disk (idempotent – safe to call multiple times) */
+  load: () => Promise<void>;
+  /**
+   * Persist a set of records to disk.
+   * Called after a union merge when the local set was updated from remote.
+   */
+  persist: (records: BaseRecord[]) => Promise<void>;
+  /**
+   * Remote subdirectory under which binary assets are stored, e.g. "removebg".
+   * Omit for JSON-only modules.
+   */
+  assetDir?: string;
+  /**
+   * Return the list of binary assets associated with the given records.
+   * Only required when assetDir is set.
+   */
+  getAssets?: (records: BaseRecord[]) => BinaryAsset[];
+}
+
+// ─── Disk persistence helper (for local refresh after merge) ─────────────────
+
+let _dataDir: string | null = null;
+
+async function getDataDir(): Promise<string> {
+  if (!_dataDir) _dataDir = (await appLocalDataDir()).replace(/[/\\]+$/, '');
+  return _dataDir;
+}
+
+async function persistToDisk(filename: string, records: BaseRecord[]): Promise<void> {
+  try {
+    const dir  = await getDataDir();
+    const path = `${dir}/${filename}`;
+    if (!(await exists(dir))) await mkdir(dir, { recursive: true });
+    await writeTextFile(path, JSON.stringify({ version: 1, records }, null, 2));
+  } catch (e) {
+    console.warn('[sync] failed to write to disk:', filename, e);
+  }
+}
+
+// ─── Module registry ──────────────────────────────────────────────────────────
+//
+// To add a new module:
+//   1. Import its historyRecords ref and loadHistory function above.
+//   2. Push a descriptor object here.  That's it.
+
+const HISTORY_MODULES: HistoryModuleDescriptor[] = [
+  {
+    remoteFile: 'h_bibtex.enc',
+    label:      'BibTeX Converter',
+    ref:        bibtexRecords,
+    load:       loadBibtex,
+    persist:    records => persistToDisk('bibtex_converter_history.json', records),
+  },
+  {
+    remoteFile: 'h_diff.enc',
+    label:      'Diff Viewer',
+    ref:        diffRecords,
+    load:       loadDiff,
+    persist:    records => persistToDisk('diff_viewer_history.json', records),
+  },
+  {
+    remoteFile: 'h_latex2png.enc',
+    label:      'LaTeX → PNG',
+    ref:        latex2pngRecords,
+    load:       loadLatex2png,
+    persist:    records => persistToDisk('latex2png_history.json', records),
+  },
+  {
+    remoteFile: 'h_tablegen.enc',
+    label:      'Table Generator',
+    ref:        tableGenRecords,
+    load:       loadTableGen,
+    persist:    records => persistToDisk('table_generator_history.json', records),
+  },
+  {
+    remoteFile: 'h_textconv.enc',
+    label:      'Text Converter',
+    ref:        textConvRecords,
+    load:       loadTextConv,
+    persist:    records => persistToDisk('text_converter_history.json', records),
+  },
+  {
+    remoteFile: 'h_textstats.enc',
+    label:      'Text Statistics',
+    ref:        textStatsRecords,
+    load:       loadTextStats,
+    persist:    records => persistToDisk('text_stats_history.json', records),
+  },
+  {
+    remoteFile: 'h_latexconv.enc',
+    label:      'Format Converter',
+    ref:        latexConvRecords,
+    load:       loadLatexConv,
+    persist:    records => persistToDisk('latex_converter_history.json', records),
+  },
+  {
+    remoteFile: 'h_removebg.enc',
+    label:      'Remove Background',
+    ref:        removeBgRecords,
+    load:       loadRemoveBg,
+    persist:    records => persistRemoveBgToDisk(records as unknown as RemoveBgRecord[]),
+    assetDir:   'removebg',
+    getAssets:  (records) => (records as unknown as RemoveBgRecord[]).flatMap(r => [
+      {
+        path:       r.originalPath,
+        readLocal:  () => readImageBytes(r.originalPath),
+        writeLocal: (data) => writeImageBytes(r.originalPath, data),
+      },
+      {
+        path:       r.processedPath,
+        readLocal:  () => readImageBytes(r.processedPath),
+        writeLocal: (data) => writeImageBytes(r.processedPath, data),
+      },
+    ]),
+  },
+];
+
+// Dirty tracking — watch every module's ref automatically
+for (const mod of HISTORY_MODULES) {
+  watch(mod.ref, markDirty, { deep: true });
+}
+
+// ─── Binary asset sync ────────────────────────────────────────────────────────
+
+/**
+ * Sync binary assets for a module:
+ *  - Local-only files  → encrypt and upload to remote.
+ *  - Remote-only files → download, decrypt, and save locally.
+ *  - Files on both sides are left as-is (no overwrite) to save bandwidth.
+ */
+async function syncBinaryAssets(assetDir: string, assets: BinaryAsset[]): Promise<void> {
+  if (assets.length === 0) return;
+
+  // Ensure remote directory tree exists
+  await webdavMkcol(dav(), remotePath(`${assetDir}/`));
+
+  const subdirs = [...new Set(
+    assets
+      .map(a => a.path.split('/').slice(0, -1).join('/'))
+      .filter(Boolean),
+  )];
+  for (const sub of subdirs) {
+    await webdavMkcol(dav(), remotePath(`${assetDir}/${sub}/`));
+  }
+
+  for (const asset of assets) {
+    const remoteFilePath = remotePath(`${assetDir}/${asset.path}`);
+    const localData      = await asset.readLocal();
+
+    if (localData) {
+      // Have it locally → upload if remote is missing
+      const onRemote = await webdavExists(dav(), remoteFilePath);
+      if (!onRemote) {
+        try {
+          const enc = await encryptData(bytesToBase64(localData), syncConfig.password);
+          await webdavPut(dav(), remoteFilePath, enc);
+        } catch (e) {
+          console.warn('[sync] failed to upload asset:', asset.path, e);
+        }
+      }
+    } else {
+      // Missing locally → try to download from remote
+      try {
+        const resp = await webdavGet(dav(), remoteFilePath);
+        if (resp.ok) {
+          const plain = await decryptData(resp.body, syncConfig.password);
+          await asset.writeLocal(base64ToBytes(plain));
+        }
+      } catch (e) {
+        console.warn('[sync] failed to download asset:', asset.path, e);
+      }
+    }
+  }
+}
+
 // ─── Settings sync ────────────────────────────────────────────────────────────
 
 interface SettingsEnvelope {
-  /** ISO 8601 timestamp of the settings version on this side. */
   timestamp: string;
-  /** Sanitised settings (device-specific fields removed). */
   data: Record<string, unknown>;
 }
 
-/** Fields that must never be synced (device-specific). */
 const SKIP_SETTINGS = new Set(['modelPath']);
 
 function localSettingsSnapshot(): Record<string, unknown> {
@@ -236,89 +453,75 @@ async function syncSettings(): Promise<void> {
   const remote = await webdavGet(dav(), path);
 
   if (!remote.ok) {
-    // File doesn't exist yet → upload local
     const enc = await encryptData(JSON.stringify(localEnvelope), password);
     await webdavPut(dav(), path, enc);
     return;
   }
 
-  // File exists → compare and merge
   let remoteEnvelope: SettingsEnvelope;
   try {
     const plain   = await decryptData(remote.body, password);
     remoteEnvelope = JSON.parse(plain);
   } catch {
-    // Decryption failed (wrong password or corrupted).  Upload local to overwrite.
     const enc = await encryptData(JSON.stringify(localEnvelope), password);
     await webdavPut(dav(), path, enc);
     return;
   }
 
   if (remoteEnvelope.timestamp > localEnvelope.timestamp) {
-    // Remote is newer → apply it locally, preserve modelPath
     const savedModelPath = settings.modelPath;
     Object.assign(settings, remoteEnvelope.data);
     settings.modelPath = savedModelPath;
-    // Update our "last modified" so we don't keep re-uploading
     syncConfig.settingsLastModified = remoteEnvelope.timestamp;
   } else if (localEnvelope.timestamp > remoteEnvelope.timestamp) {
-    // Local is newer → upload
     const enc = await encryptData(JSON.stringify(localEnvelope), password);
     await webdavPut(dav(), path, enc);
   }
-  // Equal timestamps → no-op
 }
 
-// ─── History sync ─────────────────────────────────────────────────────────────
-
-interface BaseRecord {
-  id:        string;
-  timestamp: string;
-  [key: string]: unknown;
-}
+// ─── Generic history sync ─────────────────────────────────────────────────────
 
 /**
- * Generic history sync for any module.
- *
- * @param remoteFile   Remote filename, e.g. "h_bibtex.enc"
- * @param localRef     The module's exported `historyRecords` ref
- * @param diskFile     The module's local JSON filename, e.g. "bibtex_converter_history.json"
- * @param label        Human-readable name for progress reporting
+ * Sync one history module:
+ *   1. Download + decrypt remote records.
+ *   2. Union-merge with local records by ID, sort by timestamp, trim.
+ *   3. Apply merged set locally if remote had new entries.
+ *   4. Upload merged set if local had new entries.
+ *   5. Sync binary assets (if the module declares any).
  */
-async function syncHistoryModule<T extends BaseRecord>(
-  remoteFile: string,
-  localRef:   { value: T[] },
-  diskFile:   string,
-  label:      string,
-): Promise<void> {
-  syncStatus.progress = `Syncing history: ${label}…`;
+async function syncHistoryModule(mod: HistoryModuleDescriptor): Promise<void> {
+  syncStatus.progress = `Syncing history: ${mod.label}…`;
 
   const password   = syncConfig.password;
-  const path       = remotePath(remoteFile);
+  const path       = remotePath(mod.remoteFile);
   const maxRecords = settings.historyMaxRecords ?? 100;
-  const local      = localRef.value;
+  const local      = mod.ref.value as BaseRecord[];
 
   const remote = await webdavGet(dav(), path);
 
   if (!remote.ok) {
-    // No remote copy → upload local if non-empty
     if (local.length > 0) {
       const enc = await encryptData(JSON.stringify({ version: 1, records: local }), password);
       await webdavPut(dav(), path, enc);
     }
+    // Still sync binary assets even when no remote JSON exists yet
+    if (mod.assetDir && mod.getAssets) {
+      await syncBinaryAssets(mod.assetDir, mod.getAssets(local));
+    }
     return;
   }
 
-  // Decrypt remote records
-  let remoteRecords: T[] = [];
+  let remoteRecords: BaseRecord[] = [];
   try {
     const plain   = await decryptData(remote.body, password);
     const payload = JSON.parse(plain);
     remoteRecords = Array.isArray(payload.records) ? payload.records : [];
   } catch {
-    // Decryption failed → upload local to overwrite
     const enc = await encryptData(JSON.stringify({ version: 1, records: local }), password);
     await webdavPut(dav(), path, enc);
+    if (mod.assetDir && mod.getAssets) {
+      await syncBinaryAssets(mod.assetDir, mod.getAssets(local));
+    }
     return;
   }
 
@@ -335,100 +538,19 @@ async function syncHistoryModule<T extends BaseRecord>(
 
   // ── Apply merged records locally if remote had new data ───────────────────
   if (newFromRemote.length > 0 || merged.length < local.length) {
-    localRef.value = merged;
-    await persistToDisk(diskFile, merged);
+    mod.ref.value = merged;
+    await mod.persist(merged);
   }
 
-  // ── Upload merged records if local had new data or set was trimmed ────────
+  // ── Upload merged records if local had new data ───────────────────────────
   if (newFromLocal.length > 0 || merged.length < remoteRecords.length) {
     const enc = await encryptData(JSON.stringify({ version: 1, records: merged }), password);
     await webdavPut(dav(), path, enc);
   }
-}
 
-// ─── Disk persistence helper (for local refresh after merge) ─────────────────
-
-let _dataDir: string | null = null;
-
-async function getDataDir(): Promise<string> {
-  if (!_dataDir) _dataDir = (await appLocalDataDir()).replace(/[/\\]+$/, '');
-  return _dataDir;
-}
-
-async function persistToDisk(filename: string, records: unknown[]): Promise<void> {
-  try {
-    const dir  = await getDataDir();
-    const path = `${dir}/${filename}`;
-    if (!(await exists(dir))) await mkdir(dir, { recursive: true });
-    await writeTextFile(path, JSON.stringify({ version: 1, records }, null, 2));
-  } catch (e) {
-    console.warn('[sync] failed to write to disk:', filename, e);
-  }
-}
-
-/** Special case: RemoveBg stores its index at <dataDir>/removebg_history/index.json */
-async function persistRemoveBgToDisk(records: unknown[]): Promise<void> {
-  try {
-    const dir      = await getDataDir();
-    const histDir  = `${dir}/removebg_history`;
-    const indexPath = `${histDir}/index.json`;
-    if (!(await exists(histDir))) await mkdir(histDir, { recursive: true });
-    await writeTextFile(indexPath, JSON.stringify({ version: 1, records }, null, 2));
-  } catch (e) {
-    console.warn('[sync] failed to write removebg index to disk:', e);
-  }
-}
-
-// ─── RemoveBg special case ────────────────────────────────────────────────────
-
-/** RemoveBg special-cased because it uses a subdirectory for storage. */
-async function syncHistoryModuleRemoveBg(): Promise<void> {
-  syncStatus.progress = 'Syncing history: Remove Background…';
-
-  const password   = syncConfig.password;
-  const path       = remotePath('h_removebg.enc');
-  const maxRecords = settings.historyMaxRecords ?? 100;
-  const local      = removeBgRecords.value;
-
-  const remote = await webdavGet(dav(), path);
-
-  if (!remote.ok) {
-    if (local.length > 0) {
-      const enc = await encryptData(JSON.stringify({ version: 1, records: local }), password);
-      await webdavPut(dav(), path, enc);
-    }
-    return;
-  }
-
-  let remoteRecords: typeof local = [];
-  try {
-    const plain   = await decryptData(remote.body, password);
-    const payload = JSON.parse(plain);
-    remoteRecords = Array.isArray(payload.records) ? payload.records : [];
-  } catch {
-    const enc = await encryptData(JSON.stringify({ version: 1, records: local }), password);
-    await webdavPut(dav(), path, enc);
-    return;
-  }
-
-  const localIdSet  = new Set(local.map(r => r.id));
-  const remoteIdSet = new Set(remoteRecords.map(r => r.id));
-
-  const newFromRemote = remoteRecords.filter(r => !localIdSet.has(r.id));
-  const newFromLocal  = local.filter(r => !remoteIdSet.has(r.id));
-
-  const merged = [...local, ...newFromRemote]
-    .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
-    .slice(0, maxRecords);
-
-  if (newFromRemote.length > 0 || merged.length < local.length) {
-    removeBgRecords.value = merged;
-    await persistRemoveBgToDisk(merged);
-  }
-
-  if (newFromLocal.length > 0 || merged.length < remoteRecords.length) {
-    const enc = await encryptData(JSON.stringify({ version: 1, records: merged }), password);
-    await webdavPut(dav(), path, enc);
+  // ── Sync binary assets using the final merged record set ──────────────────
+  if (mod.assetDir && mod.getAssets) {
+    await syncBinaryAssets(mod.assetDir, mod.getAssets(merged));
   }
 }
 
@@ -446,12 +568,11 @@ export async function testConnection(): Promise<{ ok: boolean; message: string }
 }
 
 /**
- * Run a sync cycle: first checks the remote manifest (1 GET) to decide whether
- * a full sync is needed, then syncs settings + all history modules if there are
- * any changes (local or remote).
+ * Run a sync cycle.  Checks the remote manifest first (1 GET) to avoid a
+ * full sync when nothing has changed on either side.
  *
- * Both the manual "Sync Now" button and the auto-sync timer use this same path,
- * so the behaviour is identical and always bandwidth-efficient.
+ * Both the manual "Sync Now" button and the auto-sync timer call this function,
+ * so behaviour is always identical and bandwidth-efficient.
  */
 export async function syncNow(): Promise<void> {
   if (syncStatus.state === 'syncing') return;
@@ -471,19 +592,15 @@ export async function syncNow(): Promise<void> {
   syncStatus.state     = 'syncing';
   syncStatus.lastError = null;
 
-  // ── Pre-flight check ───────────────────────────────────────────────────────
-  // Fetch the tiny manifest file (1 GET) to detect remote changes.
-  // If neither local state is dirty nor the remote manifest has advanced, skip.
+  // ── Pre-flight: check manifest (1 GET) ────────────────────────────────────
   try {
     syncStatus.progress = 'Checking for changes…';
     const manifest      = await fetchRemoteManifest();
 
-    // manifest === null → first sync or network error → proceed with full sync
     const remoteChanged = manifest === null || manifest.syncedAt !== _lastKnownRemoteSyncedAt;
     const localDirty    = _localDirtyAt > 0;
 
     if (!remoteChanged && !localDirty) {
-      // Nothing to do — surface the "up to date" state briefly, then revert
       syncStatus.state    = 'uptodate';
       syncStatus.progress = '';
       _syncInProgress     = false;
@@ -494,50 +611,23 @@ export async function syncNow(): Promise<void> {
       return;
     }
   } catch {
-    // Manifest fetch failed → fall through to full sync to be safe
+    // Manifest fetch failed → fall through to full sync
   }
 
   try {
-    // Ensure all history modules are loaded from disk before syncing,
-    // so local data isn't missed if the user hasn't visited those pages yet.
+    // Load all history from disk before syncing (so data isn't missed if the
+    // user hasn't visited those pages in this session yet).
     syncStatus.progress = 'Loading local history…';
-    await Promise.all([
-      loadBibtex(), loadDiff(), loadLatex2png(), loadTableGen(),
-      loadTextConv(), loadTextStats(), loadRemoveBg(),
-    ]);
+    await Promise.all(HISTORY_MODULES.map(m => m.load()));
 
     syncStatus.progress = 'Preparing remote directory…';
     await ensureRemoteDir();
 
     await syncSettings();
 
-    await syncHistoryModule(
-      'h_bibtex.enc', bibtexRecords,
-      'bibtex_converter_history.json', 'BibTeX Converter',
-    );
-    await syncHistoryModule(
-      'h_diff.enc', diffRecords,
-      'diff_viewer_history.json', 'Diff Viewer',
-    );
-    await syncHistoryModule(
-      'h_latex2png.enc', latex2pngRecords,
-      'latex2png_history.json', 'LaTeX → PNG',
-    );
-    await syncHistoryModule(
-      'h_tablegen.enc', tableGenRecords,
-      'table_generator_history.json', 'Table Generator',
-    );
-    await syncHistoryModule(
-      'h_textconv.enc', textConvRecords,
-      'text_converter_history.json', 'Text Converter',
-    );
-    await syncHistoryModule(
-      'h_textstats.enc', textStatsRecords,
-      'text_stats_history.json', 'Text Statistics',
-    );
-
-    // RemoveBg: sync metadata only (image files are device-local)
-    await syncHistoryModuleRemoveBg();
+    for (const mod of HISTORY_MODULES) {
+      await syncHistoryModule(mod);
+    }
 
     const syncedAt        = new Date().toISOString();
     syncStatus.state      = 'success';
@@ -545,7 +635,6 @@ export async function syncNow(): Promise<void> {
     syncStatus.progress   = '';
     localStorage.setItem('webdav-sync-last-at', syncedAt);
 
-    // Upload the manifest and clear the dirty flag
     await uploadManifest(syncedAt);
     _localDirtyAt = 0;
   } catch (e: unknown) {
@@ -576,7 +665,6 @@ function startAutoSync(intervalMinutes: number): void {
   }, intervalMinutes * 60 * 1000);
 }
 
-// React to config changes that affect auto-sync scheduling
 watch(
   () => ({ enabled: syncConfig.enabled, interval: syncConfig.autoSyncIntervalMinutes }),
   ({ enabled, interval }) => {

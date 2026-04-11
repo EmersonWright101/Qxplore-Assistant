@@ -18,6 +18,8 @@ import TextStats from '../modules/Text/TextStats/View.vue'
 import TextConverterHistory from '../modules/Text/CaseConverter/History.vue'
 import TextStatsHistory from '../modules/Text/TextStats/History.vue'
 import PrinterView from '../modules/Misc/Printer/View.vue'
+import LatexConverterView from '../modules/Paper/LatexConverter/View.vue'
+import LatexConverterHistory from '../modules/Paper/LatexConverter/History.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -86,6 +88,16 @@ const router = createRouter({
       path: '/misc/printer',
       name: 'Printer',
       component: PrinterView
+    },
+    {
+      path: '/paper/format-converter',
+      name: 'LatexConverter',
+      component: LatexConverterView
+    },
+    {
+      path: '/paper/format-converter/history',
+      name: 'LatexConverterHistory',
+      component: LatexConverterHistory
     },
     {
       path: '/text/history',
