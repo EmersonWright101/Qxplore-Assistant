@@ -27,64 +27,85 @@
         </router-link>
       </div>
 
-      <nav
-        class="flex-1 px-3 space-y-1 overflow-y-auto pt-2"
-      >
-        
-        <div v-for="group in menuGroups" :key="group.id" class="space-y-1 mb-3">
-          <button 
-            @click="handleGroupClick(group.id)"
-            class="w-full flex items-center px-3 py-2 rounded-md text-slate-700 hover:bg-slate-200/60 transition-colors group select-none"
-            :class="isSidebarOpen ? 'justify-between' : 'justify-center'"
+      <nav class="flex-1 px-3 overflow-y-auto pt-2">
+        <TransitionGroup tag="div" name="drag-list">
+          <div
+            v-for="group in orderedMenuGroups"
+            :key="group.id"
+            class="space-y-1 mb-3"
           >
-            <div class="flex items-center gap-1">
-              <div class="p-1.5 rounded-md transition-colors" :class="group.bgColor">
-                <component 
-                  :is="group.icon" 
-                  class="w-4 h-4 transition-colors"
-                  :class="group.iconColor"
-                />
+            <button
+              :data-group-id="group.id"
+              @click="handleGroupClick(group.id)"
+              @pointerdown="onGroupPointerDown($event, group.id)"
+              @dragstart.prevent
+              class="w-full flex items-center px-3 py-2 rounded-md text-slate-700 hover:bg-slate-200/60 transition-colors group select-none"
+              :class="[
+                isSidebarOpen ? 'justify-between' : 'justify-center',
+                dragState.active && dragState.type === 'group' && dragState.id === group.id ? 'opacity-30 scale-95' : ''
+              ]"
+              style="transition: opacity 0.15s, transform 0.15s"
+            >
+              <div class="flex items-center gap-2">
+                <div class="p-1.5 rounded-md transition-colors" :class="group.bgColor">
+                  <component
+                    :is="group.icon"
+                    class="w-4 h-4 transition-colors"
+                    :class="group.iconColor"
+                  />
+                </div>
+                <span
+                  class="text-sm font-bold transition-all duration-200 overflow-hidden whitespace-nowrap"
+                  :class="isSidebarOpen ? 'w-full opacity-100 ml-1' : 'w-0 opacity-0'"
+                >{{ group.label }}</span>
               </div>
-              <span 
-                class="text-sm font-bold transition-all duration-200 overflow-hidden whitespace-nowrap"
-                :class="isSidebarOpen ? 'w-full opacity-100 ml-1' : 'w-0 opacity-0'"
-              >{{ group.label }}</span>
-            </div>
-            <ChevronRight 
-              v-if="isSidebarOpen"
-              class="w-4 h-4 text-slate-400 transition-transform duration-200"
-              :class="{ 'rotate-90': !collapsedGroups[group.id] }"
-            />
-          </button>
+              <ChevronRight
+                v-if="isSidebarOpen"
+                class="w-4 h-4 text-slate-400 transition-transform duration-200"
+                :class="{ 'rotate-90': !collapsedGroups[group.id] }"
+              />
+            </button>
 
-          <Transition name="expand">
-            <div v-show="isSidebarOpen && !collapsedGroups[group.id]" class="space-y-1 overflow-hidden pb-2">
-              <router-link 
-                v-for="item in group.children"
-                :key="item.path"
-                :to="item.path" 
-                class="flex items-center gap-1 px-3 py-2 rounded-md transition-all duration-200 group"
-                :class="[
-                  isSidebarOpen ? 'ml-7' : 'justify-center',
-                  route.path === item.path
-                    ? `${group.activeClass} shadow-sm font-medium`
-                    : 'text-slate-500 hover:bg-slate-100'
-                ]"
-              >
-                <component 
-                  :is="item.icon" 
-                  class="w-4 h-4" 
-                  :class="route.path !== item.path ? 'opacity-70 group-hover:opacity-100' : ''"
-                />
-                <span 
-                  class="text-sm transition-all duration-200 overflow-hidden whitespace-nowrap"
-                  :class="isSidebarOpen ? 'w-full opacity-100' : 'w-0 opacity-0'"
-                >{{ item.label }}</span>
-              </router-link>
-            </div>
-          </Transition>
-        </div>
-
+            <Transition name="expand">
+              <div v-show="isSidebarOpen && !collapsedGroups[group.id]" class="overflow-hidden pb-2">
+                <TransitionGroup tag="div" name="drag-list" class="space-y-1">
+                  <div
+                    v-for="item in group.children"
+                    :key="item.path"
+                    :data-child-path="item.path"
+                    :data-child-group="group.id"
+                    @pointerdown.stop="onChildPointerDown($event, group.id, item.path)"
+                    @dragstart.prevent
+                  >
+                    <router-link
+                      :to="item.path"
+                      draggable="false"
+                      class="flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200 group select-none"
+                      :class="[
+                        isSidebarOpen ? 'ml-7' : 'justify-center',
+                        route.path === item.path
+                          ? `${group.activeClass} shadow-sm font-medium`
+                          : 'text-slate-500 hover:bg-slate-100',
+                        dragState.active && dragState.type === 'child' && dragState.id === item.path ? 'opacity-30 scale-95' : ''
+                      ]"
+                      style="transition: opacity 0.15s, transform 0.15s"
+                    >
+                      <component
+                        :is="item.icon"
+                        class="w-4 h-4"
+                        :class="route.path !== item.path ? 'opacity-70 group-hover:opacity-100' : ''"
+                      />
+                      <span
+                        class="text-sm transition-all duration-200 overflow-hidden whitespace-nowrap flex-1"
+                        :class="isSidebarOpen ? 'w-full opacity-100' : 'w-0 opacity-0'"
+                      >{{ item.label }}</span>
+                    </router-link>
+                  </div>
+                </TransitionGroup>
+              </div>
+            </Transition>
+          </div>
+        </TransitionGroup>
       </nav>
 
       <div
@@ -177,6 +198,21 @@
       </div>
     </main>
   </div>
+
+  <!-- Drag ghost: follows cursor, rendered outside the sidebar -->
+  <Teleport to="body">
+    <div
+      v-if="dragState.active"
+      class="fixed pointer-events-none z-[9999] flex items-center gap-2 px-3 py-2 bg-white/95 backdrop-blur-sm border border-slate-200 shadow-xl rounded-lg text-sm font-medium text-slate-700 select-none"
+      :style="{
+        left: dragState.ghostX + 16 + 'px',
+        top: dragState.ghostY - 16 + 'px',
+        transform: 'rotate(2deg)',
+      }"
+    >
+      <span>{{ dragState.ghostLabel }}</span>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -189,6 +225,7 @@ import {
 import { useI18n } from 'vue-i18n';
 // 🟢 引入全局 Store
 import { updateStore, checkForUpdates, initUpdateStore } from './store/updateStore';
+import { settings } from './store/settings';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -227,6 +264,9 @@ function stopResize() {
 onUnmounted(() => {
   document.removeEventListener('pointermove', onResize);
   document.removeEventListener('pointerup', stopResize);
+  document.removeEventListener('pointermove', onDragMove);
+  document.removeEventListener('pointermove', onDragThresholdMove);
+  document.removeEventListener('keydown', onKeyDown);
 });
 
 const toggleSidebar = () => {
@@ -316,6 +356,236 @@ const handleGroupClick = (id: string) => {
   }
 };
 
+// ── Drag threshold (distinguishes click from drag) ───────────────────────────
+let dragPendingType: 'group' | 'child' | null = null;
+let dragPendingId = '';
+let dragPendingGroupId = '';
+let dragPendingStartX = 0;
+let dragPendingStartY = 0;
+const DRAG_THRESHOLD = 5;
+
+function onGroupPointerDown(e: PointerEvent, groupId: string) {
+  if (!isSidebarOpen.value || e.button !== 0) return;
+  dragPendingType = 'group';
+  dragPendingId = groupId;
+  dragPendingGroupId = '';
+  dragPendingStartX = e.clientX;
+  dragPendingStartY = e.clientY;
+  document.addEventListener('pointermove', onDragThresholdMove);
+  document.addEventListener('pointerup', onDragThresholdCancel, { once: true });
+}
+
+function onChildPointerDown(e: PointerEvent, groupId: string, path: string) {
+  if (!isSidebarOpen.value || e.button !== 0) return;
+  dragPendingType = 'child';
+  dragPendingId = path;
+  dragPendingGroupId = groupId;
+  dragPendingStartX = e.clientX;
+  dragPendingStartY = e.clientY;
+  document.addEventListener('pointermove', onDragThresholdMove);
+  document.addEventListener('pointerup', onDragThresholdCancel, { once: true });
+}
+
+function onDragThresholdMove(e: PointerEvent) {
+  if (!dragPendingType) return;
+  const dx = e.clientX - dragPendingStartX;
+  const dy = e.clientY - dragPendingStartY;
+  if (Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) {
+    document.removeEventListener('pointermove', onDragThresholdMove);
+    document.removeEventListener('pointerup', onDragThresholdCancel);
+    const type = dragPendingType;
+    const id = dragPendingId;
+    const gid = dragPendingGroupId;
+    dragPendingType = null;
+    if (type === 'group') startGroupDrag(e, id);
+    else startChildDrag(e, gid, id);
+  }
+}
+
+function onDragThresholdCancel() {
+  document.removeEventListener('pointermove', onDragThresholdMove);
+  dragPendingType = null;
+}
+
+// ── Pointer-based drag state ─────────────────────────────────────────────────
+const dragState = reactive({
+  active: false,
+  type: null as 'group' | 'child' | null,
+  id: '',          // groupId or childPath
+  fromGroupId: '', // for child drags
+  ghostX: 0,
+  ghostY: 0,
+  ghostLabel: '',
+});
+
+// Live ordering during drag (animates items shifting in real-time)
+const liveGroupOrder = ref<string[] | null>(null);
+const liveChildOrder = ref<{ groupId: string; order: string[] } | null>(null);
+
+// ── Ordered menu groups ──────────────────────────────────────────────────────
+const orderedMenuGroups = computed(() => {
+  const base = menuGroups.value;
+  const groupOrder = liveGroupOrder.value ?? settings.sidebarGroupOrder;
+
+  let ordered = base;
+  if (groupOrder && groupOrder.length > 0) {
+    ordered = [...base].sort((a, b) => {
+      const ai = groupOrder.indexOf(a.id);
+      const bi = groupOrder.indexOf(b.id);
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+  }
+
+  return ordered.map(group => {
+    let childOrder: string[] | undefined;
+    if (liveChildOrder.value?.groupId === group.id) {
+      childOrder = liveChildOrder.value.order;
+    } else {
+      childOrder = settings.sidebarChildOrder?.[group.id];
+    }
+    if (!childOrder || childOrder.length === 0) return group;
+    const orderedChildren = [...group.children].sort((a, b) => {
+      const ai = childOrder!.indexOf(a.path);
+      const bi = childOrder!.indexOf(b.path);
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+    return { ...group, children: orderedChildren };
+  });
+});
+
+// ── Drag helpers ─────────────────────────────────────────────────────────────
+function reorder(arr: string[], fromIdx: number, toIdx: number): string[] {
+  const result = [...arr];
+  const [item] = result.splice(fromIdx, 1);
+  result.splice(Math.max(0, toIdx), 0, item);
+  return result;
+}
+
+function swallowNextClick(e: MouseEvent) {
+  e.stopPropagation();
+  e.preventDefault();
+}
+
+function startGroupDrag(e: PointerEvent, groupId: string) {
+  if (!isSidebarOpen.value) return;
+  e.preventDefault();
+  document.addEventListener('click', swallowNextClick, { capture: true, once: true });
+  const group = orderedMenuGroups.value.find(g => g.id === groupId);
+  dragState.active = true;
+  dragState.type = 'group';
+  dragState.id = groupId;
+  dragState.ghostX = e.clientX;
+  dragState.ghostY = e.clientY;
+  dragState.ghostLabel = group?.label || '';
+  liveGroupOrder.value = orderedMenuGroups.value.map(g => g.id);
+  document.addEventListener('pointermove', onDragMove);
+  document.addEventListener('pointerup', onDragEnd, { once: true });
+  document.body.style.userSelect = 'none';
+  document.body.style.cursor = 'grabbing';
+}
+
+function startChildDrag(e: PointerEvent, groupId: string, path: string) {
+  if (!isSidebarOpen.value) return;
+  e.preventDefault();
+  document.addEventListener('click', swallowNextClick, { capture: true, once: true });
+  const group = orderedMenuGroups.value.find(g => g.id === groupId);
+  const child = group?.children.find(c => c.path === path);
+  dragState.active = true;
+  dragState.type = 'child';
+  dragState.id = path;
+  dragState.fromGroupId = groupId;
+  dragState.ghostX = e.clientX;
+  dragState.ghostY = e.clientY;
+  dragState.ghostLabel = child?.label || '';
+  liveChildOrder.value = { groupId, order: group?.children.map(c => c.path) || [] };
+  document.addEventListener('pointermove', onDragMove);
+  document.addEventListener('pointerup', onDragEnd, { once: true });
+  document.body.style.userSelect = 'none';
+  document.body.style.cursor = 'grabbing';
+}
+
+function onDragMove(e: PointerEvent) {
+  dragState.ghostX = e.clientX;
+  dragState.ghostY = e.clientY;
+  if (dragState.type === 'group') updateGroupPreview(e);
+  else if (dragState.type === 'child') updateChildPreview(e);
+}
+
+function updateGroupPreview(e: PointerEvent) {
+  const els = document.querySelectorAll<HTMLElement>('[data-group-id]');
+  for (const el of els) {
+    const rect = el.getBoundingClientRect();
+    if (e.clientY < rect.top || e.clientY > rect.bottom) continue;
+    const targetId = el.dataset.groupId!;
+    if (targetId === dragState.id) continue;
+    const current = liveGroupOrder.value!;
+    const fromIdx = current.indexOf(dragState.id);
+    const toIdx = current.indexOf(targetId);
+    let insertIdx = e.clientY < rect.top + rect.height / 2 ? toIdx : toIdx + 1;
+    if (fromIdx < insertIdx) insertIdx--;
+    if (insertIdx !== fromIdx) liveGroupOrder.value = reorder(current, fromIdx, insertIdx);
+    break;
+  }
+}
+
+function updateChildPreview(e: PointerEvent) {
+  const els = document.querySelectorAll<HTMLElement>(`[data-child-group="${dragState.fromGroupId}"]`);
+  for (const el of els) {
+    const rect = el.getBoundingClientRect();
+    if (e.clientY < rect.top || e.clientY > rect.bottom) continue;
+    const targetPath = el.dataset.childPath!;
+    if (targetPath === dragState.id) continue;
+    const current = liveChildOrder.value!.order;
+    const fromIdx = current.indexOf(dragState.id);
+    const toIdx = current.indexOf(targetPath);
+    let insertIdx = e.clientY < rect.top + rect.height / 2 ? toIdx : toIdx + 1;
+    if (fromIdx < insertIdx) insertIdx--;
+    if (insertIdx !== fromIdx) {
+      liveChildOrder.value = { groupId: dragState.fromGroupId, order: reorder(current, fromIdx, insertIdx) };
+    }
+    break;
+  }
+}
+
+function onDragEnd() {
+  if (dragState.type === 'group' && liveGroupOrder.value) {
+    settings.sidebarGroupOrder = liveGroupOrder.value;
+  } else if (dragState.type === 'child' && liveChildOrder.value) {
+    settings.sidebarChildOrder = { ...settings.sidebarChildOrder, [liveChildOrder.value.groupId]: liveChildOrder.value.order };
+  }
+  cleanupDrag();
+}
+
+function cancelDrag() {
+  cleanupDrag();
+}
+
+function cleanupDrag() {
+  document.removeEventListener('pointermove', onDragMove);
+  document.body.style.userSelect = '';
+  document.body.style.cursor = '';
+  dragState.active = false;
+  dragState.type = null;
+  dragState.id = '';
+  dragState.fromGroupId = '';
+  dragState.ghostLabel = '';
+  liveGroupOrder.value = null;
+  liveChildOrder.value = null;
+}
+
+function onKeyDown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && dragState.active) {
+    document.removeEventListener('pointerup', onDragEnd);
+    cancelDrag();
+  }
+}
+
 const currentRouteName = computed(() => {
   switch (route.path) {
     case '/text': return t('sidebar.case_converter') || '大小写转换';
@@ -341,6 +611,7 @@ const currentRouteName = computed(() => {
 
 onMounted(() => {
   initUpdateStore();
+  document.addEventListener('keydown', onKeyDown);
   // 30秒后静默检查更新
   setTimeout(async () => {
     // 使用全局 store 检查，如果是空闲状态才检查
@@ -376,5 +647,10 @@ onMounted(() => {
   max-height: 0;
   opacity: 0;
   transform: translateY(-5px);
+}
+
+/* FLIP animation for drag-reorder */
+.drag-list-move {
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 </style>

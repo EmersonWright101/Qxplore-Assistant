@@ -19,6 +19,8 @@ interface SettingsState {
   activeLlmProviderId: string;
   historyMaxRecords: number;
   homeCardOrder: string[];
+  sidebarGroupOrder: string[];
+  sidebarChildOrder: Record<string, string[]>;
 }
 
 const savedSettings = localStorage.getItem('app-settings');
@@ -31,6 +33,8 @@ const defaultSettings: SettingsState = {
   activeLlmProviderId: '',
   historyMaxRecords: 100,
   homeCardOrder: [],
+  sidebarGroupOrder: [],
+  sidebarChildOrder: {},
 };
 
 let parsed: Record<string, unknown> = savedSettings ? JSON.parse(savedSettings) : {};
