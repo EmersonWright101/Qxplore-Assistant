@@ -220,7 +220,7 @@ import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import {
   Settings, PanelLeft, ChevronRight, FileText, FunctionSquare,
-  Command, Type, Sigma, Film, Eraser, Printer, Layers, BookMarked, GraduationCap, Palette, GitCompare, BarChart2, Table2, ArrowLeftRight
+  Command, Type, Sigma, Film, Eraser, Printer, Layers, BookMarked, GraduationCap, Palette, GitCompare, BarChart2, Table2, ArrowLeftRight, QrCode
 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 // 🟢 引入全局 Store
@@ -331,7 +331,8 @@ const menuGroups = computed(() => [
     bgColor: 'bg-orange-50 group-hover:bg-orange-100/80',
     activeClass: 'bg-orange-50 text-orange-700',
     children: [
-      { path: '/misc/printer', label: t('sidebar.printer') || '打印', icon: Printer }
+      { path: '/misc/printer', label: t('sidebar.printer') || '打印', icon: Printer },
+      { path: '/misc/qrcode', label: t('sidebar.qr_code') || '二维码', icon: QrCode },
     ]
   }
 ]);

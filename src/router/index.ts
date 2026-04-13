@@ -18,6 +18,8 @@ import TextStats from '../modules/Text/TextStats/View.vue'
 import TextConverterHistory from '../modules/Text/CaseConverter/History.vue'
 import TextStatsHistory from '../modules/Text/TextStats/History.vue'
 import PrinterView from '../modules/Misc/Printer/View.vue'
+import QrCodeView from '../modules/Misc/QrCode/View.vue'
+import QrCodeHistory from '../modules/Misc/QrCode/History.vue'
 import LatexConverterView from '../modules/Paper/LatexConverter/View.vue'
 import LatexConverterHistory from '../modules/Paper/LatexConverter/History.vue'
 
@@ -88,6 +90,16 @@ const router = createRouter({
       path: '/misc/printer',
       name: 'Printer',
       component: PrinterView
+    },
+    {
+      path: '/misc/qrcode',
+      name: 'QrCode',
+      component: QrCodeView
+    },
+    {
+      path: '/misc/qrcode/history',
+      name: 'QrCodeHistory',
+      component: QrCodeHistory
     },
     {
       path: '/paper/format-converter',
