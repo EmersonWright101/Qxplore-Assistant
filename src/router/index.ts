@@ -1,27 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import HomeView from '../modules/Home/View.vue'
-import TextConverterView from '../modules/Text/CaseConverter/View.vue'
-import BibtexConverter from '../modules/Paper/BibtexConverter/View.vue'
-import BibtexConverterHistory from '../modules/Paper/BibtexConverter/History.vue'
-import ColorSchemeView from '../modules/Paper/ColorScheme/View.vue'
-import SettingsView from '../modules/Settings/View.vue'
-import Latex2Png from '../modules/Latex/Latex2Png/View.vue'
-import Latex2PngHistory from '../modules/Latex/Latex2Png/History.vue'
-import TableGenerator from '../modules/Latex/TableGenerator/View.vue'
-import TableGeneratorHistory from '../modules/Latex/TableGenerator/History.vue'
-import RemoveBg from '../modules/Media/RemoveBg/View.vue'
-import RemoveBgHistory from '../modules/Media/RemoveBg/History.vue'
-import DiffViewer from '../modules/Text/DiffViewer/View.vue'
-import DiffViewerHistory from '../modules/Text/DiffViewer/History.vue'
-import TextStats from '../modules/Text/TextStats/View.vue'
-import TextConverterHistory from '../modules/Text/CaseConverter/History.vue'
-import TextStatsHistory from '../modules/Text/TextStats/History.vue'
-import PrinterView from '../modules/Misc/Printer/View.vue'
-import QrCodeView from '../modules/Misc/QrCode/View.vue'
-import QrCodeHistory from '../modules/Misc/QrCode/History.vue'
-import LatexConverterView from '../modules/Paper/LatexConverter/View.vue'
-import LatexConverterHistory from '../modules/Paper/LatexConverter/History.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -34,109 +13,109 @@ const router = createRouter({
     {
       path: '/text',
       name: 'text-converter',
-      component: TextConverterView
-    },
-    {
-      path: '/text/bibtex',
-      name: 'bibtex-converter',
-      component: BibtexConverter
-    },
-    {
-      path: '/text/bibtex/history',
-      name: 'BibtexConverterHistory',
-      component: BibtexConverterHistory
-    },
-    {
-      path: '/settings',
-      name: 'settings',
-      component: SettingsView
-    },
-    {
-      path: '/latex',
-      name: 'Latex',
-      component: Latex2Png
-    },
-    {
-      path: '/latex/history',
-      name: 'Latex2PngHistory',
-      component: Latex2PngHistory
-    },
-    {
-      path: '/latex/table',
-      name: 'TableGenerator',
-      component: TableGenerator
-    },
-    {
-      path: '/latex/table/history',
-      name: 'TableGeneratorHistory',
-      component: TableGeneratorHistory
-    },
-    {
-      path: '/media/remove-bg',
-      name: 'RemoveBg',
-      component: RemoveBg
-    },
-    {
-      path: '/media/remove-bg/history',
-      name: 'RemoveBgHistory',
-      component: RemoveBgHistory
-    },
-    {
-      path: '/paper/color',
-      name: 'ColorScheme',
-      component: ColorSchemeView
-    },
-    {
-      path: '/misc/printer',
-      name: 'Printer',
-      component: PrinterView
-    },
-    {
-      path: '/misc/qrcode',
-      name: 'QrCode',
-      component: QrCodeView
-    },
-    {
-      path: '/misc/qrcode/history',
-      name: 'QrCodeHistory',
-      component: QrCodeHistory
-    },
-    {
-      path: '/paper/format-converter',
-      name: 'LatexConverter',
-      component: LatexConverterView
-    },
-    {
-      path: '/paper/format-converter/history',
-      name: 'LatexConverterHistory',
-      component: LatexConverterHistory
+      component: () => import('../modules/Text/CaseConverter/View.vue'),
     },
     {
       path: '/text/history',
       name: 'TextConverterHistory',
-      component: TextConverterHistory
+      component: () => import('../modules/Text/CaseConverter/History.vue'),
     },
     {
       path: '/text/diff',
       name: 'DiffViewer',
-      component: DiffViewer
+      component: () => import('../modules/Text/DiffViewer/View.vue'),
     },
     {
       path: '/text/diff/history',
       name: 'DiffViewerHistory',
-      component: DiffViewerHistory
+      component: () => import('../modules/Text/DiffViewer/History.vue'),
     },
     {
       path: '/text/stats',
       name: 'TextStats',
-      component: TextStats
+      component: () => import('../modules/Text/TextStats/View.vue'),
     },
     {
       path: '/text/stats/history',
       name: 'TextStatsHistory',
-      component: TextStatsHistory
+      component: () => import('../modules/Text/TextStats/History.vue'),
     },
-  ]
+    {
+      path: '/text/bibtex',
+      name: 'bibtex-converter',
+      component: () => import('../modules/Paper/BibtexConverter/View.vue'),
+    },
+    {
+      path: '/text/bibtex/history',
+      name: 'BibtexConverterHistory',
+      component: () => import('../modules/Paper/BibtexConverter/History.vue'),
+    },
+    {
+      path: '/paper/color',
+      name: 'ColorScheme',
+      component: () => import('../modules/Paper/ColorScheme/View.vue'),
+    },
+    {
+      path: '/paper/format-converter',
+      name: 'LatexConverter',
+      component: () => import('../modules/Paper/LatexConverter/View.vue'),
+    },
+    {
+      path: '/paper/format-converter/history',
+      name: 'LatexConverterHistory',
+      component: () => import('../modules/Paper/LatexConverter/History.vue'),
+    },
+    {
+      path: '/latex',
+      name: 'Latex',
+      component: () => import('../modules/Latex/Latex2Png/View.vue'),
+    },
+    {
+      path: '/latex/history',
+      name: 'Latex2PngHistory',
+      component: () => import('../modules/Latex/Latex2Png/History.vue'),
+    },
+    {
+      path: '/latex/table',
+      name: 'TableGenerator',
+      component: () => import('../modules/Latex/TableGenerator/View.vue'),
+    },
+    {
+      path: '/latex/table/history',
+      name: 'TableGeneratorHistory',
+      component: () => import('../modules/Latex/TableGenerator/History.vue'),
+    },
+    {
+      path: '/media/remove-bg',
+      name: 'RemoveBg',
+      component: () => import('../modules/Media/RemoveBg/View.vue'),
+    },
+    {
+      path: '/media/remove-bg/history',
+      name: 'RemoveBgHistory',
+      component: () => import('../modules/Media/RemoveBg/History.vue'),
+    },
+    {
+      path: '/misc/printer',
+      name: 'Printer',
+      component: () => import('../modules/Misc/Printer/View.vue'),
+    },
+    {
+      path: '/misc/qrcode',
+      name: 'QrCode',
+      component: () => import('../modules/Misc/QrCode/View.vue'),
+    },
+    {
+      path: '/misc/qrcode/history',
+      name: 'QrCodeHistory',
+      component: () => import('../modules/Misc/QrCode/History.vue'),
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('../modules/Settings/View.vue'),
+    },
+  ],
 })
 
 export default router

@@ -114,37 +114,66 @@
         <p class="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">
           {{ t('home.quick_launch') }}
         </p>
-        <transition-group tag="div" name="card-reorder" class="grid grid-cols-4 gap-3">
+        <transition-group tag="div" name="card-reorder" class="grid grid-cols-4 gap-3 items-start">
           <div
             v-for="f in displayedFeatures"
             :key="f.path"
             :data-feature-path="f.path"
             :class="[
-              'group relative flex flex-col gap-3 p-5 rounded-2xl bg-white/60 backdrop-blur-sm border border-white/80 shadow-sm',
-              dragPath === f.path ? 'opacity-0 pointer-events-none' : 'hover:shadow-md cursor-grab',
+              'group relative rounded-2xl shadow-sm',
+              dragPath === f.path ? 'opacity-0 pointer-events-none' : 'hover:shadow-lg cursor-grab',
             ]"
-            style="touch-action: none; user-select: none;"
+            style="touch-action: none; user-select: none; perspective: 1000px;"
             @pointerdown="onCardPointerDown(f, $event)"
           >
-            <!-- drag handle dots -->
-            <div class="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-25 transition-opacity duration-150 pointer-events-none">
-              <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
-                <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
-                <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
-              </svg>
+            <!-- Flip inner: rotates 180° on hover -->
+            <div
+              :class="[
+                'relative w-full transition-transform duration-500 [transform-style:preserve-3d]',
+                !isDragging ? 'group-hover:[transform:rotateY(180deg)]' : '',
+              ]"
+            >
+              <!-- ── Front face ── -->
+              <div class="relative flex flex-col gap-3 p-5 rounded-2xl bg-white/60 backdrop-blur-sm border border-white/80 [backface-visibility:hidden]">
+                <!-- drag handle dots -->
+                <div class="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-25 transition-opacity duration-150 pointer-events-none">
+                  <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+                    <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                    <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+                  </svg>
+                </div>
+                <div :class="`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0 ${f.color}`">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path :d="f.icon" />
+                  </svg>
+                </div>
+                <div class="flex flex-col gap-1 min-h-0">
+                  <div class="text-sm font-semibold text-slate-700 leading-tight">{{ t(f.name) }}</div>
+                  <div class="text-xs text-slate-400 leading-relaxed line-clamp-1">{{ t(f.desc) }}</div>
+                </div>
+              </div>
+
+              <!-- ── Back face (same layout, subtle color tint) ── -->
+              <div class="absolute inset-0 flex flex-col gap-3 p-5 rounded-2xl [backface-visibility:hidden] [transform:rotateY(180deg)] border border-white/80 backdrop-blur-sm overflow-hidden">
+                <!-- color accent strip -->
+                <div :class="`absolute inset-x-0 top-0 h-1 rounded-t-2xl ${f.color}`"></div>
+                <div :class="`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0 ${f.color}`">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path :d="f.icon" />
+                  </svg>
+                </div>
+                <div class="flex flex-col gap-1 min-h-0">
+                  <div class="text-sm font-semibold text-slate-700 leading-tight">{{ t(f.name) }}</div>
+                  <div class="text-xs text-slate-400 leading-relaxed line-clamp-1">{{ t(f.desc) }}</div>
+                </div>
+                <!-- inline style for bg so it can be white -->
+                <div class="absolute inset-0 -z-10 bg-white/80 rounded-2xl"></div>
+              </div>
+
+              <!-- ── Transparent navigation overlay ── -->
+              <router-link :to="f.path" class="absolute inset-0 z-10 rounded-2xl" @click.capture="onCardClick" />
             </div>
-            <router-link :to="f.path" class="flex flex-col gap-3 flex-1" @click.capture="onCardClick">
-              <div :class="`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0 ${f.color}`">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path :d="f.icon" />
-                </svg>
-              </div>
-              <div class="flex flex-col gap-1 min-h-0">
-                <div class="text-sm font-semibold text-slate-700 group-hover:text-slate-900 leading-tight">{{ t(f.name) }}</div>
-                <div class="text-xs text-slate-400 leading-relaxed">{{ t(f.desc) }}</div>
-              </div>
-            </router-link>
           </div>
         </transition-group>
       </div>
@@ -205,6 +234,7 @@ let suppressClick  = false;
 const ghostFeature = computed(() =>
   features.value.find(f => f.path === dragPath.value) ?? null
 );
+const isDragging = computed(() => dragPath.value !== null);
 
 // Real-time computed order: reinsert dragged card at hovered slot position
 const displayedFeatures = computed<Feature[]>(() => {

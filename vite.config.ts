@@ -17,6 +17,35 @@ export default defineConfig(async () => ({
     exclude: ['@huggingface/transformers'],
   },
 
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id: string) => {
+          // Heavy AI/ML libs — only loaded when RemoveBg is opened
+          if (id.includes('@huggingface/transformers') || id.includes('@imgly/background-removal')) {
+            return 'vendor-ai'
+          }
+          // PDF processing — only loaded when relevant pages open
+          if (id.includes('pdfjs-dist')) {
+            return 'vendor-pdf'
+          }
+          // LaTeX rendering
+          if (id.includes('katex')) {
+            return 'vendor-katex'
+          }
+          // QR code
+          if (id.includes('qr-code-styling') || id.includes('jsqr')) {
+            return 'vendor-qr'
+          }
+          // Core Vue framework — shared by all pages, load once
+          if (id.includes('node_modules/vue') || id.includes('node_modules/vue-router') || id.includes('node_modules/vue-i18n')) {
+            return 'vendor-vue'
+          }
+        },
+      },
+    },
+  },
+
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors
